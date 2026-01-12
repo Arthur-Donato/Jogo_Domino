@@ -71,21 +71,22 @@ function sairJogo:draw()
     love.graphics.setLineWidth(3)
 
     --CRIANDO OS CIRCULOS
-    love.graphics.circle("fill", config.WIDTH*0.1, config.HEIGHT * 0.2, 50)
-    love.graphics.circle("fill", config.WIDTH* 0.25, config.HEIGHT * 0.2, 50)
-    love.graphics.circle("fill", config.WIDTH * 0.38, config.HEIGHT * 0.2, 50)
+    local tamanhoCircle = 50 * config.scaleX
+    love.graphics.circle("fill", config.WIDTH*0.1, config.HEIGHT * 0.2, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH* 0.25, config.HEIGHT * 0.2, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH * 0.38, config.HEIGHT * 0.2, tamanhoCircle)
 
-    love.graphics.circle("fill", config.WIDTH * 0.1, config.HEIGHT * 0.68, 50)
-    love.graphics.circle("fill", config.WIDTH * 0.25, config.HEIGHT * 0.68, 50)
-    love.graphics.circle("fill", config.WIDTH * 0.38, config.HEIGHT * 0.68, 50)
+    love.graphics.circle("fill", config.WIDTH * 0.1, config.HEIGHT * 0.68, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH * 0.25, config.HEIGHT * 0.68, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH * 0.38, config.HEIGHT * 0.68, tamanhoCircle)
 
-    love.graphics.circle("fill", config.WIDTH * 0.6, config.HEIGHT * 0.2, 50)
-    love.graphics.circle("fill", config.WIDTH * 0.75, config.HEIGHT * 0.2, 50)
-    love.graphics.circle("fill", config.WIDTH * 0.9, config.HEIGHT * 0.2, 50)
+    love.graphics.circle("fill", config.WIDTH * 0.6, config.HEIGHT * 0.2, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH * 0.75, config.HEIGHT * 0.2, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH * 0.9, config.HEIGHT * 0.2, tamanhoCircle)
 
-    love.graphics.circle("fill", config.WIDTH * 0.6, config.HEIGHT * 0.68, 50)
-    love.graphics.circle("fill", config.WIDTH * 0.75, config.HEIGHT * 0.68, 50)
-    love.graphics.circle("fill", config.WIDTH * 0.9, config.HEIGHT * 0.68, 50)
+    love.graphics.circle("fill", config.WIDTH * 0.6, config.HEIGHT * 0.68, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH * 0.75, config.HEIGHT * 0.68, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH * 0.9, config.HEIGHT * 0.68, tamanhoCircle)
 
 
     for _,piece in ipairs(self.botoes) do

@@ -69,8 +69,10 @@ function selecionarDificuldade:draw()
     love.graphics.line(config.WIDTH/2,0,config.WIDTH/2,config.HEIGHT)
 
     love.graphics.setLineWidth(3)
-    love.graphics.circle("fill", config.WIDTH / 4, config.HEIGHT / 2, 50)
-    love.graphics.circle("fill", config.WIDTH / 1.33 , config.HEIGHT / 2, 50)
+
+    local tamanhoCircle = 50 * config.scaleX
+    love.graphics.circle("fill", config.WIDTH / 4, config.HEIGHT / 2, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH / 1.33 , config.HEIGHT / 2, tamanhoCircle)
 
     -- Loop para desenhar todos os botões
 

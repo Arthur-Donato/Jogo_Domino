@@ -71,16 +71,17 @@ function menuInicial:draw()
 
     
     --CRIANDO AS CIRCUNFERENCIAS PRESENTES NA TELA
-    love.graphics.circle("fill", config.WIDTH*0.1, config.HEIGHT*0.2, 50 * config.scaleX)
-    love.graphics.circle("fill", config.WIDTH*0.38, config.HEIGHT*0.2, 50 * config.scaleX)
 
-    love.graphics.circle("fill", config.WIDTH*0.1, config.HEIGHT*0.68, 50 * config.scaleX)
-    love.graphics.circle("fill", config.WIDTH*0.38, config.HEIGHT*0.68, 50 * config.scaleX)
-    love.graphics.circle("fill", config.WIDTH*0.61, config.HEIGHT*0.2, 50 * config.scaleX)
-    love.graphics.circle("fill", config.WIDTH*0.88, config.HEIGHT*0.2, 50 *config.scaleX)
+    local tamanhoCircle = 50 * config.scaleX
 
-    love.graphics.circle("fill", config.WIDTH*0.61, config.HEIGHT*0.68, 50 * config.scaleX)
-    love.graphics.circle("fill", config.WIDTH*0.88, config.HEIGHT*0.68, 50 * config.scaleX)
+    love.graphics.circle("fill", config.WIDTH*0.1, config.HEIGHT*0.2, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH*0.38, config.HEIGHT*0.2, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH*0.1, config.HEIGHT*0.68, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH*0.38, config.HEIGHT*0.68,tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH*0.61, config.HEIGHT*0.2, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH*0.88, config.HEIGHT*0.2, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH*0.61, config.HEIGHT*0.68,tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH*0.88, config.HEIGHT*0.68,tamanhoCircle)
 
     --CRIANDO O BOTAO DE INICIO DE JOGO
     for _,piece in ipairs(self.botoes) do
