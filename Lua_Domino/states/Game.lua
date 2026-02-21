@@ -3,6 +3,8 @@ local ListaDuplamenteEncadeada = require 'lib.ListaDuplamenteEncadeada'
 local Peca  = require 'lib.Peca'
 local WIDTH, HEIGHT = love.window.getDesktopDimensions()
 
+VEZ_DO_JOGADOR = true --Sempre começa na vez do jogador
+
 local Game = {
     botaoComprar = {
             x = 1010,
@@ -121,6 +123,15 @@ function Game:draw()
         posicaoAtual = posicaoAtual + piece.width + 20
     end
 
+
+    if VEZ_DO_JOGADOR == false then
+        local pecaJogada -- variavel que armazena a peça jogada pela IA independente do nivel de dificuldade
+
+        -- table.insert(self.mesa, pecaJogada)
+        -- table.remove(self.maoJogador, posicaoPeçaJogada)
+        -- VEZ_DO_JOGADOR = true
+    end
+
 --NOTE: Explicação do for acima:
 -- em Lua não se sabe oque a tabela é, se é apenas uma tabela normal [1,2,3,4,5] ou uma tabela-hashtable {"primeiro"=5,"segundo"=2}
 -- assim devemos deixar claro como deve se percorrer a tabela assim:
@@ -225,12 +236,39 @@ function Game:update()
     local mx = love.mouse.getX()
     local my = love.mouse.getY()
 
+    for _,piece in ipairs(self.maoJogador) do
+    --LOGICA PARA ALTERAR O HOVERING DO BOTAO INICIAR JOGO
+        if mx > piece.x and
+           mx < piece.x + piece.width and
+           my > piece.y and
+           my < piece.y + piece.height
+        then
+            piece.isHovering = true
+        else
+            piece.isHovering = false
+        end
+    end
+
   
     
 end
 
 function Game:mousepressed(x, y, button, istouch)
+    if VEZ_DO_JOGADOR == true then
+        
+        if button == 1 then
+            
+            for i,piece in ipairs(self.maoJogador) do
+                if piece.isHovering == true then
+                    table.insert(self.mesa, piece)
+                    table.remove(self.maoJogador, i)
 
+                    VEZ_DO_JOGADOR = false
+
+                end
+            end
+        end
+    end
    
 end
 
