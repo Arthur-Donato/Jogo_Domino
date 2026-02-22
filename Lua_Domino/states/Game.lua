@@ -2,29 +2,88 @@ local GameState = require 'lib.GameState'
 local ListaDuplamenteEncadeada = require 'lib.ListaDuplamenteEncadeada'
 local Peca  = require 'lib.Peca'
 local WIDTH, HEIGHT = love.window.getDesktopDimensions()
+local config = require "config"
+
 
 VEZ_DO_JOGADOR = true --Sempre começa na vez do jogador
 
 local Game = {
     botaoComprar = {
-            x = 1010,
-            y = 878,
-            width = 200,
-            height = 80,
-            text = "Comprar",
-            isHovering = false
+        x = config.WIDTH - config.btnResponsiveX - 20, --20 de margem direita
+        y = config.HEIGHT - config.btnResponsiveY -240,-- 2x tamnho da peça + 40 sobrando, alterar posteiormente
+        width = config.btnResponsiveX-80 ,
+        height = config.btnResponsiveY,
+        text = "Comprar",
+        isHovering = false,
+        fonte = config.fonteBotoes
     },
     maoJogador = {},
     maoIA = {},
-    monte = {}
+    monte = {},
+    mesa = ListaDuplamenteEncadeada.new(),
 }
+local function calcular_disposicao_pecas_Mao(pecas, entidade)
+    local posicaoAtualX = 0 
+    local posicaoAtualY = 0
+    if entidade == "jogador" then
+        posicaoAtualY = config.HEIGHT - 20 - 160 --20 de margem inferior e 160 altura da peça(alterar para variável posteriormente
 
-function Game:enter()
+    elseif entidade =="IA" then
+        posicaoAtualY = 20 --20 de margem superior
+    end
+
+    if #pecas%2 == 0 then
+        posicaoAtualX = (config.WIDTH/2) - ((#pecas/2) * (100 + 20)) --100 largura da peça e 20 espaçamento entre as peças(alterar para variável posteriormente)
+    else
+        posicaoAtualX = (config.WIDTH/2) - (math.floor(#pecas/2) * (100 + 20)) - (100/2) --100 largura da peça e 20 espaçamento entre as peças(alterar para variável posteriormente)
+    end
+
+        for _,piece in ipairs(pecas) do
+            piece.x = posicaoAtualX
+            piece.y = posicaoAtualY
+
+
+            posicaoAtualX = posicaoAtualX + piece.width + 20
+        end
     
-    self.fonteBotoes = love.graphics.newFont(32)
-    self.mesa = ListaDuplamenteEncadeada.new()
+end
 
-    for i=0,6 do
+
+local function imprimirPecas(x,y,pecas)
+    calcular_disposicao_pecas_Mao(pecas,"jogador")
+    for _,piece in ipairs(pecas) do--NOTE:
+        if piece.isHovering and VEZ_DO_JOGADOR then
+            love.graphics.setColor(1,1,1,1)
+        else
+            love.graphics.setColor(0.9, 0.9, 0.9, 1)
+        end
+        if x > piece.x and
+        x < piece.x + piece.width and
+        y > piece.y and
+        y < piece.y + piece.height
+        then
+            piece.isHovering = true
+        else
+            piece.isHovering = false
+        end
+            
+        love.graphics.draw(piece.img,piece.x,piece.y)
+    end
+        
+        love.graphics.setColor(1,1,1,1)
+    
+end
+
+local function imprimirPecasIA()
+    calcular_disposicao_pecas_Mao(Game.maoIA,"IA")
+        for _,piece in ipairs(Game.maoIA) do--NOTE:
+            love.graphics.draw(piece.img,piece.x,piece.y)
+        end
+end
+
+
+local function criarPecas(monte)
+        for i=0,6 do
         for j=i,6 do
             local imagemPeca = love.graphics.newImage("images/"..i.."-"..j..".png")--carrega a imagem da peça
             print("images/"..i.."-"..j..".png")
@@ -35,12 +94,20 @@ function Game:enter()
                 x = 0,
                 y = 0,
                 width = 100,
-                height = 160
+                height = 160,
+                isHovering = false
             }
-            table.insert(self.monte,novaPeca)
+            table.insert(monte,novaPeca)
 
         end
     end
+end
+
+
+
+function Game:enter()
+    
+    criarPecas(self.monte)
     DistribuirPecas(self.monte)
 
     
@@ -57,18 +124,6 @@ function Embaralhar(monte)
     return monte
 end
 
-function DistribuirPecas(monte)
-    Game.monte = Embaralhar(monte)
-    for i=0,7 do
-        local peca = table.remove(Game.monte)
-        table.insert(Game.maoJogador,peca)
-
-        peca = table.remove(Game.monte)
-        table.insert(Game.maoIA,peca)
-    end
-
-
-end
 --OBS: Obs:
 --deck[i], deck[j] = deck[j], deck[i]
 
@@ -79,49 +134,57 @@ end
 --deck[j] = temp
 --no java
 
-function Game:draw()
-    local mx = love.mouse.getX()
-    local my = love.mouse.getY()
-    local posicaoAtual = 30
+function DistribuirPecas(monte)
+    Game.monte = Embaralhar(monte)
+    for i=0,7 do
+        local peca = table.remove(Game.monte)
+        table.insert(Game.maoJogador,peca)
 
-    love.graphics.clear(0.953, 0.953, 0.953, 1)
+        peca = table.remove(Game.monte)
+        --peca.img = love.graphics.newImage("images/pecaVazia.png") Retirei para testes futuros
+        table.insert(Game.maoIA,peca)
+    end
 
-    --ADICIONANDO O BTOAO DE COMPRAR UMA NOVA PECA
-    if self.botaoComprar.isHovering then
+
+end
+
+local function imprimirBotaoCompra(x,y, botao)
+    if botao.isHovering and VEZ_DO_JOGADOR then
         love.graphics.setColor(0.8, 0.8, 0.8, 1)
     else
         love.graphics.setColor(1,1,1,1)
     end
-    if mx > self.botaoComprar.x and
-       mx < self.botaoComprar.x + self.botaoComprar.width and
-       my > self.botaoComprar.y and
-       my < self.botaoComprar.y + self.botaoComprar.height
+    if x > botao.x and
+       x < botao.x + botao.width and
+       y > botao.y and
+       y < botao.y + botao.height
     then
-        self.botaoComprar.isHovering = true
+        botao.isHovering = true
     else
-        self.botaoComprar.isHovering = false
+        botao.isHovering = false
     end
 
-    love.graphics.rectangle("fill", self.botaoComprar.x, self.botaoComprar.y, self.botaoComprar.width, self.botaoComprar.height)
-
+    --botao comprar
+    love.graphics.rectangle("fill", botao.x, botao.y, botao.width, botao.height)
     love.graphics.setColor(0,0,0,1)
-
-    love.graphics.rectangle("line", self.botaoComprar.x, self.botaoComprar.y, self.botaoComprar.width, self.botaoComprar.height)
-
-    local posicaoTexto = self.botaoComprar.y + (self.botaoComprar.height / 2) - (self.fonteBotoes:getHeight() / 2)
-
-    love.graphics.printf(self.botaoComprar.text, self.botaoComprar.x, posicaoTexto, self.botaoComprar.width, "center")
-
+    love.graphics.rectangle("line", botao.x, botao.y, botao.width, botao.height)
+    local posicaoTexto = botao.y + (botao.height / 2) - (botao.fonte:getHeight() / 2)
+    love.graphics.printf(botao.text, botao.x, posicaoTexto, botao.width, "center")
     love.graphics.setColor(1,1,1,1)
-    --ADICIONANDO AS PECAS DO JOGO
+end
+
+
+function Game:draw()
+    local mx = love.mouse.getX()
+    local my = love.mouse.getY()
     
 
-    for _,piece in ipairs(self.maoJogador) do--NOTE:
-        love.graphics.draw(piece.img,posicaoAtual,850)
-        piece.x = posicaoAtual
-        piece.y = 850 --alterar para variável posteriormente
-        posicaoAtual = posicaoAtual + piece.width + 20
-    end
+    love.graphics.clear(0.953, 0.953, 0.953, 1)
+
+    imprimirBotaoCompra(mx,my,self.botaoComprar)
+    imprimirPecas(mx,my,self.maoJogador)
+    imprimirPecasIA(self.maoIA)
+
 
 
     if VEZ_DO_JOGADOR == false then
@@ -237,7 +300,7 @@ function Game:update()
     local my = love.mouse.getY()
 
     for _,piece in ipairs(self.maoJogador) do
-    --LOGICA PARA ALTERAR O HOVERING DO BOTAO INICIAR JOGO
+
         if mx > piece.x and
            mx < piece.x + piece.width and
            my > piece.y and
@@ -248,8 +311,7 @@ function Game:update()
             piece.isHovering = false
         end
     end
-
-  
+ 
     
 end
 
@@ -261,9 +323,10 @@ function Game:mousepressed(x, y, button, istouch)
             for i,piece in ipairs(self.maoJogador) do
                 if piece.isHovering == true then
                     table.insert(self.mesa, piece)
+                    
                     table.remove(self.maoJogador, i)
 
-                    VEZ_DO_JOGADOR = false
+                    --VEZ_DO_JOGADOR = false
 
                 end
             end

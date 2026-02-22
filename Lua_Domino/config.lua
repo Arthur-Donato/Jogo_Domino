@@ -19,5 +19,6 @@ config.scaleY = config.HEIGHT / config.baseHeight
 
 config.btnResponsiveX = 370 * config.scaleX -- Determinando tamanho dos botoes de forma responsiva
 config.btnResponsiveY = 90 * config.scaleY
+config.fonteBotoes = love.graphics.newFont(32 * config.scaleX)
 
 return config

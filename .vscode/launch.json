@@ -9,10 +9,10 @@
         "command": "C:\\Program Files\\LOVE\\love.exe"
       },
       "args": [
-        "C:\\Repositórios\\RepositorioLua\\Lua_Domino"
+        "C:\\Repositórios\\RepositorioLua\\Domino_Lua\\Lua_Domino"
       ],
       "scriptRoots": [
-        "C:\\Repositórios\\RepositorioLua\\Lua_Domino"
+        "C:\\Repositórios\\RepositorioLua\\Domino_Lua\\Lua_Domino"
       ]
     }
   ]
