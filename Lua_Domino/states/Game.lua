@@ -3,7 +3,6 @@ local ListaDuplamenteEncadeada = require 'lib.ListaDuplamenteEncadeada'
 local Peca  = require 'lib.Peca'
 local WIDTH, HEIGHT = love.window.getDesktopDimensions()
 local config = require "config"
-local IAFacil = require "lib.iaFacil"
 
 
 VEZ_DO_JOGADOR = true --Sempre começa na vez do jogador
@@ -327,13 +326,66 @@ function Game:mousepressed(x, y, button, istouch)
                     
                     table.remove(self.maoJogador, i)
 
-                    --VEZ_DO_JOGADOR = false 
+                    --VEZ_DO_JOGADOR = false
 
                 end
             end
+
+            if x > self.botaoComprar.x and
+               x < self.botaoComprar.x + self.botaoComprar.width and
+               y > self.botaoComprar.y and
+               y < self.botaoComprar.y + self.botaoComprar.height
+            then
+            
+            -- Se já existir peça jogável, não pode comprar
+            if self:existePecaJogavel(self.maoJogador) then
+                print("Você já tem peça jogável! Não pode comprar.")
+                return
+            end
+
+            -- Senão compra até achar ou acabar o monte
+            self:comprarAteEncontrarJogada()
+        end
         end
     end
    
 end
 
-return Game 
+function Game:pecaEncaixaNaMesa(peca)
+    -- Se mesa estiver vazia, qualquer peça pode ser jogada
+    if self.mesa:isEmpty() then
+        return true
+    end
+
+    -- AQUI você pode implementar depois a lógica real de dominó
+    -- Por enquanto vou deixar sempre true para teste
+    return true
+end
+
+function Game:existePecaJogavel(mao)
+    for _, peca in ipairs(mao) do
+        if self:pecaEncaixaNaMesa(peca) then
+            return true
+        end
+    end
+    return false
+end
+
+function Game:comprarAteEncontrarJogada()
+    while #self.monte > 0 do
+            
+        local pecaComprada = table.remove(self.monte)
+        table.insert(self.maoJogador, pecaComprada)
+
+        print("Jogador comprou uma peça")
+
+        if self:pecaEncaixaNaMesa(pecaComprada) then
+            print("Peça comprada pode ser jogada!")
+            return
+        end
+    end
+
+    print("Monte acabou. Jogador passou a vez.")
+end
+
+return Game
