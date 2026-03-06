@@ -3,6 +3,7 @@ local ListaDuplamenteEncadeada = require 'lib.ListaDuplamenteEncadeada'
 local Peca  = require 'lib.Peca'
 local WIDTH, HEIGHT = love.window.getDesktopDimensions()
 local config = require "config"
+local IAFacil = require "lib.iaFacil"
 
 
 VEZ_DO_JOGADOR = true --Sempre começa na vez do jogador
@@ -326,7 +327,7 @@ function Game:mousepressed(x, y, button, istouch)
                     
                     table.remove(self.maoJogador, i)
 
-                    --VEZ_DO_JOGADOR = false
+                    --VEZ_DO_JOGADOR = false 
 
                 end
             end
@@ -335,5 +336,4 @@ function Game:mousepressed(x, y, button, istouch)
    
 end
 
-
-return Game
+return Game 
