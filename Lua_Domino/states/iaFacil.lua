@@ -1,4 +1,4 @@
--- IA FÁCIL
+-- IA FÁCIL 
 local IAFacil = {}
 
 -- BUSCAR JOGADAS VÁLIDAS DA IA
@@ -89,11 +89,19 @@ function IAFacil.jogada(game)
         elseif escolhida.lado == "direita" then
             game.mesa:addLast(peca.valor1, peca.valor2)
         end
+        return true
     end
-
-    -- Se não houver jogadas válidas,
-    -- a IA simplesmente não joga.
-    -- Compra e passe NÃO são responsabilidade desta IA.
+    -- Se não houver jogadas válidas, a IA compra até jogar ou passar a vez
+    print("IA não tem jogada válida")
+    local conseguiu = game:comprarAteEncontrarJogadaIA()
+    if conseguiu then
+        print("IA comprou uma peça")
+        return IAFacil.jogada(game)
+    else
+        print("IA passou a vez")
+    end
+    
+    return false
 end
 
 return IAFacil

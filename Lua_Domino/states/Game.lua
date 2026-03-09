@@ -3,6 +3,7 @@ local ListaDuplamenteEncadeada = require 'lib.ListaDuplamenteEncadeada'
 local Peca  = require 'lib.Peca'
 local WIDTH, HEIGHT = love.window.getDesktopDimensions()
 local config = require "config"
+local IAFacil = require "lib.iaFacil"
 
 
 VEZ_DO_JOGADOR = true --Sempre começa na vez do jogador
@@ -136,7 +137,7 @@ end
 
 function DistribuirPecas(monte)
     Game.monte = Embaralhar(monte)
-    for i=0,7 do
+    for i=1,7 do
         local peca = table.remove(Game.monte)
         table.insert(Game.maoJogador,peca)
 
@@ -188,11 +189,9 @@ function Game:draw()
 
 
     if VEZ_DO_JOGADOR == false then
-        local pecaJogada -- variavel que armazena a peça jogada pela IA independente do nivel de dificuldade
+        IAFacil.jogada(self)
 
-        -- table.insert(self.mesa, pecaJogada)
-        -- table.remove(self.maoJogador, posicaoPeçaJogada)
-        -- VEZ_DO_JOGADOR = true
+        VEZ_DO_JOGADOR = true
     end
 
 --NOTE: Explicação do for acima:
@@ -295,6 +294,26 @@ love.graphics.rectangle("fill", 655, 670, 135, 75)
     
 end
 
+function Game:comprarAteEncontrarJogadaIA()
+
+    while #self.monte > 0 do
+
+        local pecaComprada = table.remove(self.monte)
+        table.insert(self.maoIA, pecaComprada)
+
+        print("IA comprou uma peça")
+
+        -- verifica se agora pode jogar
+        if self:pecaEncaixaNaMesa(pecaComprada) then
+            print("IA encontrou peça jogável!")
+            return true
+        end
+    end
+
+    print("Monte acabou. IA passou a vez.")
+    return false
+end
+
 function Game:update()
     local mx = love.mouse.getX()
     local my = love.mouse.getY()
@@ -322,11 +341,11 @@ function Game:mousepressed(x, y, button, istouch)
             
             for i,piece in ipairs(self.maoJogador) do
                 if piece.isHovering == true then
-                    table.insert(self.mesa, piece)
+                    table.insert(self.mesa, piece) 
                     
                     table.remove(self.maoJogador, i)
 
-                    --VEZ_DO_JOGADOR = false
+                    VEZ_DO_JOGADOR = false 
 
                 end
             end
