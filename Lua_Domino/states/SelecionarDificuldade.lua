@@ -124,11 +124,11 @@ function selecionarDificuldade:mousepressed(x, y, button, istouch)
                 if botao.id == "voltar" then
                     GameState.switch('menuInicial')
                 elseif botao.id == "facil" then
-                    GameState.switch('Game')
+                    GameState.switch('Game', 'facil')
                 elseif botao.id == "medio" then
-                    -- lógica para dificuldade média
+                    GameState.switch('Game', 'medio')
                 elseif botao.id == "dificil" then
-                    -- lógica para dificuldade difícil
+                    GameState.switch('Game', 'dificil')
                 end
             end
         end

@@ -3,6 +3,9 @@ local ListaDuplamenteEncadeada = require 'lib.ListaDuplamenteEncadeada'
 local Peca  = require 'lib.Peca'
 local WIDTH, HEIGHT = love.window.getDesktopDimensions()
 local config = require "config"
+local IADificil = require "states.iaDificil"
+local tempoIA = 0
+local delayIA = 2
 
 
 VEZ_DO_JOGADOR = true --Sempre começa na vez do jogador
@@ -105,13 +108,16 @@ end
 
 
 
-function Game:enter()
-    
+function Game:enter(dificuldade)
+    self.dificuldade = dificuldade or "facil"
+
+    self.maoJogador = {}
+    self.maoIA = {}
+    self.monte = {}
+    self.mesa = ListaDuplamenteEncadeada.new()
+
     criarPecas(self.monte)
     DistribuirPecas(self.monte)
-
-    
-    
 end
 
 
@@ -184,25 +190,6 @@ function Game:draw()
     imprimirBotaoCompra(mx,my,self.botaoComprar)
     imprimirPecas(mx,my,self.maoJogador)
     imprimirPecasIA(self.maoIA)
-
-
-
-    if VEZ_DO_JOGADOR == false then
-        local pecaJogada -- variavel que armazena a peça jogada pela IA independente do nivel de dificuldade
-
-        -- table.insert(self.mesa, pecaJogada)
-        -- table.remove(self.maoJogador, posicaoPeçaJogada)
-        -- VEZ_DO_JOGADOR = true
-    end
-
---NOTE: Explicação do for acima:
--- em Lua não se sabe oque a tabela é, se é apenas uma tabela normal [1,2,3,4,5] ou uma tabela-hashtable {"primeiro"=5,"segundo"=2}
--- assim devemos deixar claro como deve se percorrer a tabela assim:
--- ipairs diz a Lua que deve percorrer a lista em ordem (1,2,3,4)
--- o "_" representa o index i que usamos normalmente. Porém, é algo comun usar o _ para representar um index que não pretedemos usar
--- isso é necessário pois, a linguagem lua retorna dois valores ao colocar apenas "for piece in lista"
--- irá retornar o valor do indice e o valor da lista, assim sendo necessário """"""tratar""""" ambos
-
 
 --COMEÇAR OS TESTES PARA O DESENHO FINAL DO TABULEIRO, ONDE TODAS AS PEÇAS SERÃO COLOCADAS
 
@@ -295,12 +282,12 @@ love.graphics.rectangle("fill", 655, 670, 135, 75)
     
 end
 
-function Game:update()
+function Game:update(dt)
+
     local mx = love.mouse.getX()
     local my = love.mouse.getY()
 
     for _,piece in ipairs(self.maoJogador) do
-
         if mx > piece.x and
            mx < piece.x + piece.width and
            my > piece.y and
@@ -311,8 +298,30 @@ function Game:update()
             piece.isHovering = false
         end
     end
- 
-    
+
+    -- TURNO DA IA
+    if VEZ_DO_JOGADOR == false then
+
+        tempoIA = tempoIA + dt
+
+        if tempoIA >= delayIA then
+
+            if self.dificuldade == "facil" then
+                IAFacil.jogada(self)
+
+            elseif self.dificuldade == "medio" then
+                IAFacil.jogada(self)
+
+            elseif self.dificuldade == "dificil" then
+                IADificil.jogada(self)
+            end
+
+            VEZ_DO_JOGADOR = true
+            tempoIA = 0
+        end
+
+    end
+
 end
 
 function Game:mousepressed(x, y, button, istouch)
@@ -320,16 +329,38 @@ function Game:mousepressed(x, y, button, istouch)
         
         if button == 1 then
             
-            for i,piece in ipairs(self.maoJogador) do
-                if piece.isHovering == true then
-                    table.insert(self.mesa, piece)
-                    
-                    table.remove(self.maoJogador, i)
+            for i, piece in ipairs(self.maoJogador) do
+    if piece.isHovering == true then
+        if self.mesa:isEmpty() then
+            self.mesa:addLast(piece.valor1, piece.valor2)
+            table.remove(self.maoJogador, i)
+            VEZ_DO_JOGADOR = false
+            print("Jogador jogou primeira peça:", piece.valor1, piece.valor2)
+            return
+        else
+            local esquerda = self.mesa:getHeadValue()
+            local direita = self.mesa:getTailValue()
 
-                    --VEZ_DO_JOGADOR = false
+            if piece.valor1 == esquerda or piece.valor2 == esquerda then
+                self.mesa:addFirst(piece.valor1, piece.valor2)
+                table.remove(self.maoJogador, i)
+                VEZ_DO_JOGADOR = false
+                print("Jogador jogou na esquerda:", piece.valor1, piece.valor2)
+                return
 
-                end
+            elseif piece.valor1 == direita or piece.valor2 == direita then
+                self.mesa:addLast(piece.valor1, piece.valor2)
+                table.remove(self.maoJogador, i)
+                VEZ_DO_JOGADOR = false
+                print("Jogador jogou na direita:", piece.valor1, piece.valor2)
+                return
+            else
+                print("Peça do jogador não encaixa")
+                return
             end
+        end
+    end
+end
 
             if x > self.botaoComprar.x and
                x < self.botaoComprar.x + self.botaoComprar.width and
@@ -351,15 +382,64 @@ function Game:mousepressed(x, y, button, istouch)
    
 end
 
+function Game:comprarAteEncontrarJogadaIA()
+    while #self.monte > 0 do
+        local pecaComprada = table.remove(self.monte)
+
+        if not pecaComprada then
+            break
+        end
+
+        table.insert(self.maoIA, pecaComprada)
+
+        print("IA comprou uma peça:", pecaComprada.valor1 .. "-" .. pecaComprada.valor2)
+
+        -- Se a mesa estiver vazia, joga direto
+        if self.mesa:isEmpty() then
+            self.mesa:addLast(pecaComprada.valor1, pecaComprada.valor2)
+            table.remove(self.maoIA, #self.maoIA)
+            print("IA jogou a peça comprada na mesa")
+            return true
+        end
+
+        local esquerda = self.mesa:getHeadValue()
+        local direita = self.mesa:getTailValue()
+
+        -- Se encaixa na esquerda, joga
+        if pecaComprada.valor1 == esquerda or pecaComprada.valor2 == esquerda then
+            self.mesa:addFirst(pecaComprada.valor1, pecaComprada.valor2)
+            table.remove(self.maoIA, #self.maoIA)
+            print("IA jogou a peça comprada na esquerda")
+            return true
+        end
+
+        -- Se encaixa na direita, joga
+        if pecaComprada.valor1 == direita or pecaComprada.valor2 == direita then
+            self.mesa:addLast(pecaComprada.valor1, pecaComprada.valor2)
+            table.remove(self.maoIA, #self.maoIA)
+            print("IA jogou a peça comprada na direita")
+            return true
+        end
+    end
+
+    print("Monte acabou. IA passou a vez.")
+    return false
+end
+
 function Game:pecaEncaixaNaMesa(peca)
-    -- Se mesa estiver vazia, qualquer peça pode ser jogada
     if self.mesa:isEmpty() then
         return true
     end
 
-    -- AQUI você pode implementar depois a lógica real de dominó
-    -- Por enquanto vou deixar sempre true para teste
-    return true
+    local esquerda = self.mesa:getHeadValue()
+    local direita = self.mesa:getTailValue()
+
+    return (
+        peca.valor1 == esquerda or
+        peca.valor2 == esquerda or
+        peca.valor1 == direita or
+        peca.valor2 == direita
+    )
 end
 
 function Game:existePecaJogavel(mao)
