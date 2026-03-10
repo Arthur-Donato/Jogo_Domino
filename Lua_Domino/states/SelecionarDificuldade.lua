@@ -122,7 +122,7 @@ function selecionarDificuldade:mousepressed(x, y, button, istouch)
         for _, botao in ipairs(self.botoes) do
             if botao.isHovering then
                 if botao.id == "voltar" then
-                    GameState.switch('menuInicial')
+                    GameState.switch('inserirNomeJogador')
                 elseif botao.id == "facil" then
                     GameState.switch('Game')
                 elseif botao.id == "medio" then

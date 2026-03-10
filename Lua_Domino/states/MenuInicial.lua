@@ -136,7 +136,7 @@ function menuInicial:mousepressed(x, y, button, istouch)
     if button == 1 then
 
         if self.botoes[1].isHovering then
-            GameState.switch('selecionarDificuldade')
+            GameState.switch('inserirNomeJogador')
         end
 
         if self.botoes[2].isHovering then

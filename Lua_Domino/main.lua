@@ -5,6 +5,7 @@ function love.load()
     --ADICIONANDO A TELA PARA SER RECONHECIDA COMO UM ESTADO
     GameState.register("menuInicial", require 'states.MenuInicial')
     GameState.register("selecionarDificuldade", require 'states.SelecionarDificuldade')
+    GameState.register('inserirNomeJogador', require 'states.NomeUsuario')
     GameState.register("sairJogo", require 'states.SairJogo')
     GameState.register("historico", require 'states.Historico')
     GameState.register("Game", require 'states.Game')
