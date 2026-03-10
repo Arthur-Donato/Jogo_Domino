@@ -34,3 +34,16 @@ end
 function love.mousepressed(x, y, button, istouch)
     GameState.mousepressed(x, y, button, istouch)
 end
+
+function love.keypressed(key, scancode, isrepeat)
+    -- O keypressed cuida APENAS do keypressed (teclas como Enter, Backspace, setas)
+    GameState.keypressed(key, scancode, isrepeat)
+end
+
+function love.textinput(t)
+    print("1. O main.lua ouviu a letra: " .. t)
+    -- O textinput cuida APENAS das letras digitadas (a, b, c, A, ç, etc)
+    if GameState.textinput then
+        GameState.textinput(t)
+    end
+end

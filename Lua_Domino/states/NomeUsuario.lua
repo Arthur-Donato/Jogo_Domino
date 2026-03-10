@@ -1,7 +1,11 @@
 local config = require 'config'
 local GameState = require 'lib.GameState'
+local utf8 = require 'utf8'
 
-local NomeUsuario = {}
+NomeUsuario = {
+    nomeJogador = "",
+    limiteCaracteresNome= 10
+}
 
 -- CRIAR TELA PARA INSERIR NOME DO JOGADOR UTILIZANDO O DESIGN FEITO NO FIGMA
 -- AO CLICAR NO BOTAO DE CONFIRMAR O NOME O JOGADOR SERA REDIRECIONADO PARA A TELA DE SELECIONAR DIFICULDADE, E O FLUXO CONTINUA NORMALMENTE DO JOGO COMO ERA ANTES
@@ -27,6 +31,8 @@ function NomeUsuario: enter()
         text = "VOLTAR",
         isHovering = false
     }
+
+    love.keyboard.setKeyRepeat(true)
 end
 
 
@@ -78,7 +84,37 @@ function NomeUsuario: draw()
     love.graphics.printf(self.botaoConfirmar.text, self.botaoConfirmar.x, posicaoTexto, self.botaoConfirmar.width, "center")
 
 
+    -- COMEÇANDO A CRIAR O RETANGULO ONDE O USUARIO IRÁ INSERIR O NOME
+
+    love.graphics.setColor(0.8, 0.8, 0.8, 1)
+
+    love.graphics.rectangle("fill", love.graphics.getWidth() / 2 - 350, 360, 700, 400)
+
+    love.graphics.setColor(0, 0, 0, 1)
+
+    love.graphics.rectangle("line", love.graphics.getWidth() / 2 - 350, 360, 700, 400)
+
+    posicaoTexto = 360 + (200 /2) - (self.fonteBotoes:getHeight() / 2)
+
+    love.graphics.setFont(self.fonteBotoes)
+    love.graphics.printf("Insira seu nome de jogador: ", love.graphics.getWidth() / 2 - 350, posicaoTexto, 700, "center")
+
+    posicaoTexto = 360 + (400 / 2) - (self.fonteBotoes:getHeight() / 2)
+
+    love.graphics.printf(self.nomeJogador, love.graphics.getWidth() / 2 - 350, posicaoTexto + 14, 700, "center")
+
+    love.graphics.setColor(1,1,1,1)
+
+
 end
+
+function NomeUsuario: textinput(t)
+    if string.len(self.nomeJogador) < self.limiteCaracteresNome then
+        self.nomeJogador = self.nomeJogador .. t
+    end
+end
+
+
 
 function NomeUsuario: update()
     local mx = love.mouse.getX()
@@ -107,6 +143,23 @@ function NomeUsuario: update()
 
 end
 
+function NomeUsuario: keypressed(key, scancode, isrepeat)
+    if key == "backspace" then
+        local byteoff = utf8.offset(self.nomeJogador, -1)
+
+        if byteoff then
+            self.nomeJogador = string.sub(self.nomeJogador, 1, byteoff - 1)
+        end
+
+    elseif key == "return" or key == "kpenter" then
+        if string.len(self.nomeJogador) > 0 and string.len(self.nomeJogador) < self.limiteCaracteresNome then
+            print("Nome confirmado: " .. self.nomeJogador)
+
+            GameState.switch('selecionarDificuldade')
+        end
+    end
+end
+
 function NomeUsuario: mousepressed(x,y, button)
 
     if button == 1 then
@@ -116,7 +169,13 @@ function NomeUsuario: mousepressed(x,y, button)
         end
 
         if self.botaoConfirmar.isHovering then
-            GameState.switch('selecionarDificuldade')
+            --IMPLANTAR A MESMA LOGICA DO BOTAO ENTER
+
+            if string.len(self.nomeJogador) > 0  and string.len(self.nomeJogador) < self.limiteCaracteresNome then
+                
+                GameState.switch('selecionarDificuldade')
+            end
+        
         end
     end
 end
