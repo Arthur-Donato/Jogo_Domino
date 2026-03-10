@@ -142,7 +142,7 @@ end
 
 function DistribuirPecas(monte)
     Game.monte = Embaralhar(monte)
-    for i=0,7 do
+    for i=1,7 do
         local peca = table.remove(Game.monte)
         table.insert(Game.maoJogador,peca)
 
@@ -383,46 +383,21 @@ end
 end
 
 function Game:comprarAteEncontrarJogadaIA()
+
     while #self.monte > 0 do
+
         local pecaComprada = table.remove(self.monte)
-
-        if not pecaComprada then
-            break
-        end
-
         table.insert(self.maoIA, pecaComprada)
 
-        print("IA comprou uma peça:", pecaComprada.valor1 .. "-" .. pecaComprada.valor2)
+        print("IA comprou:", pecaComprada.valor1 .. "-" .. pecaComprada.valor2)
 
-        -- Se a mesa estiver vazia, joga direto
-        if self.mesa:isEmpty() then
-            self.mesa:addLast(pecaComprada.valor1, pecaComprada.valor2)
-            table.remove(self.maoIA, #self.maoIA)
-            print("IA jogou a peça comprada na mesa")
-            return true
-        end
-
-        local esquerda = self.mesa:getHeadValue()
-        local direita = self.mesa:getTailValue()
-
-        -- Se encaixa na esquerda, joga
-        if pecaComprada.valor1 == esquerda or pecaComprada.valor2 == esquerda then
-            self.mesa:addFirst(pecaComprada.valor1, pecaComprada.valor2)
-            table.remove(self.maoIA, #self.maoIA)
-            print("IA jogou a peça comprada na esquerda")
-            return true
-        end
-
-        -- Se encaixa na direita, joga
-        if pecaComprada.valor1 == direita or pecaComprada.valor2 == direita then
-            self.mesa:addLast(pecaComprada.valor1, pecaComprada.valor2)
-            table.remove(self.maoIA, #self.maoIA)
-            print("IA jogou a peça comprada na direita")
+        if self:pecaEncaixaNaMesa(pecaComprada) then
+            print("IA encontrou peça jogável!")
             return true
         end
     end
 
-    print("Monte acabou. IA passou a vez.")
+    print("Monte acabou, IA passou")
     return false
 end
 

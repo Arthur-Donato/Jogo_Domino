@@ -195,9 +195,11 @@ function IADificil.escolherJogadaDificil(game, jogadas)
 end
 
 function IADificil.jogada(game)
+
     local jogadas = IADificil.buscarJogadasValidas(game)
 
     if #jogadas > 0 then
+
         local escolhida = IADificil.escolherJogadaDificil(game, jogadas)
         local peca = table.remove(game.maoIA, escolhida.indice)
 
@@ -207,12 +209,22 @@ function IADificil.jogada(game)
             game.mesa:addLast(peca.valor1, peca.valor2)
         end
 
-        print("IA dificil jogou:", peca.valor1 .. "-" .. peca.valor2)
+        print("IA difícil jogou:", peca.valor1 .. "-" .. peca.valor2)
+
         return true
     end
 
-    print("IA dificil não tem jogada válida, vai comprar")
-    return game:comprarAteEncontrarJogadaIA()
+    print("IA não tem jogada válida, vai comprar")
+
+    local conseguiu = game:comprarAteEncontrarJogadaIA()
+
+    if conseguiu then
+        -- tenta jogar novamente agora que tem peça nova
+        return IADificil.jogada(game)
+    end
+
+    print("IA passou a vez")
+    return false
 end
 
 return IADificil
