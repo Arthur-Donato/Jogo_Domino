@@ -188,11 +188,7 @@ function Game:draw()
 
 
 
-    if VEZ_DO_JOGADOR == false then
-        IAFacil.jogada(self)
-
-        VEZ_DO_JOGADOR = true
-    end
+    
 
 --NOTE: Explicação do for acima:
 -- em Lua não se sabe oque a tabela é, se é apenas uma tabela normal [1,2,3,4,5] ou uma tabela-hashtable {"primeiro"=5,"segundo"=2}
@@ -330,6 +326,10 @@ function Game:update()
             piece.isHovering = false
         end
     end
+    if not VEZ_DO_JOGADOR then
+        IAFacil.jogada(self)
+        VEZ_DO_JOGADOR = true
+    end
  
     
 end
@@ -341,7 +341,7 @@ function Game:mousepressed(x, y, button, istouch)
             
             for i,piece in ipairs(self.maoJogador) do
                 if piece.isHovering == true then
-                    table.insert(self.mesa, piece) 
+                    self.mesa:addFirst(piece.valor1, piece.valor2) 
                     
                     table.remove(self.maoJogador, i)
 

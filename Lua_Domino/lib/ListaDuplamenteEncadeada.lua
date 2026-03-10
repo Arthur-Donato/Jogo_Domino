@@ -35,7 +35,8 @@ function ListaDuplamenteEncadeada:addFirst(leftValue, rightValue)
         self.tail.nextNode = nil
     else
         --COMPARAR OS DOIS LADOS DA PECA COM O LADO ESQUERDO DA HEAD PARA SABER SE SAO IGUAIS s
-        if self.head.EhCompativelLadoEsquerdo(newPeca.peca.leftValue) or self.head.EhCompativelLadoDireito(newPeca.peca.rightValue) then
+        if self.head.peca:EhCompativelLadoEsquerdo(newPeca.peca.leftValue) 
+        or self.head.peca:EhCompativelLadoDireito(newPeca.peca.rightValue) then
             local pecaAux = self.head
 
             self.head = newPeca
