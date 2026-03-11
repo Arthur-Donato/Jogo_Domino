@@ -304,9 +304,13 @@ function Game:update(dt)
         if tempoIA >= delayIA and not iaProcessando then
             iaProcessando = true
 
+            local jogou = false
+
             if self.dificuldade == "dificil" then
-                IADificil.jogada(self)
+                jogou = IADificil.jogada(self)
             end
+
+            print("Resultado da jogada da IA:", jogou)
 
             VEZ_DO_JOGADOR = true
             tempoIA = 0
@@ -377,11 +381,14 @@ end
 end
 
 function Game:comprarAteEncontrarJogadaIA()
+    print("IA entrou na função de compra")
+
     while #self.monte > 0 do
         local pecaComprada = table.remove(self.monte)
 
         if not pecaComprada then
-            break
+            print("Nenhuma peça foi removida do monte")
+            return false
         end
 
         table.insert(self.maoIA, pecaComprada)
@@ -389,8 +396,10 @@ function Game:comprarAteEncontrarJogadaIA()
         print("IA comprou:", pecaComprada.valor1 .. "-" .. pecaComprada.valor2)
 
         if self:pecaEncaixaNaMesa(pecaComprada) then
-            print("IA encontrou peça jogável após comprar")
+            print("A peça comprada encaixa na mesa")
             return true
+        else
+            print("A peça comprada NÃO encaixa na mesa")
         end
     end
 
@@ -406,14 +415,18 @@ function Game:pecaEncaixaNaMesa(peca)
     local esquerda = self.mesa:getHeadValue()
     local direita = self.mesa:getTailValue()
 
-    return (
-        peca.valor1 == esquerda or
-        peca.valor2 == esquerda or
-        peca.valor1 == direita or
-        peca.valor2 == direita
-    )
-end
+    print("Testando encaixe da peça:", peca.valor1 .. "-" .. peca.valor2)
+    print("Mesa esquerda:", esquerda, "Mesa direita:", direita)
 
+    if peca.valor1 == esquerda or
+       peca.valor2 == esquerda or
+       peca.valor1 == direita or
+       peca.valor2 == direita then
+        return true
+    end
+
+    return false
+end
 function Game:existePecaJogavel(mao)
     for _, peca in ipairs(mao) do
         if self:pecaEncaixaNaMesa(peca) then
