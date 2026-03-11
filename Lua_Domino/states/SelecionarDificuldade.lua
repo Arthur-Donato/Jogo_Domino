@@ -1,6 +1,8 @@
 local GameState = require 'lib.GameState'
 local config = require 'config'
 
+DIFICULDADE_ESCOLHIDA = ""
+
 local btnDisposicaoTelaX = 0
 local btnSpaceY = 20 * config.scaleY -- Espaçamento entre os botões
 
@@ -124,8 +126,11 @@ function selecionarDificuldade:mousepressed(x, y, button, istouch)
                 if botao.id == "voltar" then
                     GameState.switch('inserirNomeJogador')
                 elseif botao.id == "facil" then
+                    DIFICULDADE_ESCOLHIDA = "facil"
                     GameState.switch('Game')
                 elseif botao.id == "medio" then
+                    DIFICULDADE_ESCOLHIDA = "Medio"
+                    GameState.switch('Game')
                     -- lógica para dificuldade média
                 elseif botao.id == "dificil" then
                     -- lógica para dificuldade difícil

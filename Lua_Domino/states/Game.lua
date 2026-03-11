@@ -4,6 +4,7 @@ local Peca  = require 'lib.Peca'
 local WIDTH, HEIGHT = love.window.getDesktopDimensions()
 local config = require "config"
 local IAFacil = require "lib.iaFacil"
+local IAMedio = require "lib.iaMedio"
 
 
 VEZ_DO_JOGADOR = true --Sempre começa na vez do jogador
@@ -188,11 +189,7 @@ function Game:draw()
 
 
 
-    if VEZ_DO_JOGADOR == false then
-        IAFacil.jogada(self)
-
-        VEZ_DO_JOGADOR = true
-    end
+    
 
 --NOTE: Explicação do for acima:
 -- em Lua não se sabe oque a tabela é, se é apenas uma tabela normal [1,2,3,4,5] ou uma tabela-hashtable {"primeiro"=5,"segundo"=2}
@@ -330,6 +327,16 @@ function Game:update()
             piece.isHovering = false
         end
     end
+    if not VEZ_DO_JOGADOR then
+
+        if DIFICULDADE_ESCOLHIDA == "facil" then
+            IAFacil.jogada(self)
+        elseif DIFICULDADE_ESCOLHIDA == "Medio" then
+            IAMedio.jogada(self)
+        end
+
+        VEZ_DO_JOGADOR = true
+    end
  
     
 end
@@ -341,7 +348,7 @@ function Game:mousepressed(x, y, button, istouch)
             
             for i,piece in ipairs(self.maoJogador) do
                 if piece.isHovering == true then
-                    table.insert(self.mesa, piece) 
+                    self.mesa:addFirst(piece.valor1, piece.valor2) 
                     
                     table.remove(self.maoJogador, i)
 
