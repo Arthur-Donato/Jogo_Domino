@@ -195,35 +195,70 @@ function IADificil.escolherJogadaDificil(game, jogadas)
 end
 
 function IADificil.jogada(game)
-
     local jogadas = IADificil.buscarJogadasValidas(game)
 
-    if #jogadas > 0 then
+    print("Jogadas válidas da IA difícil:", #jogadas)
 
+    -- Se já existe jogada, joga
+    if #jogadas > 0 then
         local escolhida = IADificil.escolherJogadaDificil(game, jogadas)
         local peca = table.remove(game.maoIA, escolhida.indice)
 
         if escolhida.lado == "esquerda" then
-            game.mesa:addFirst(peca.valor1, peca.valor2)
+            local inseriu = game.mesa:addFirst(peca.valor1, peca.valor2)
+            if not inseriu then
+                print("Erro ao inserir peça da IA na esquerda")
+                table.insert(game.maoIA, peca)
+                return false
+            end
         else
-            game.mesa:addLast(peca.valor1, peca.valor2)
+            local inseriu = game.mesa:addLast(peca.valor1, peca.valor2)
+            if not inseriu then
+                print("Erro ao inserir peça da IA na direita")
+                table.insert(game.maoIA, peca)
+                return false
+            end
         end
 
         print("IA difícil jogou:", peca.valor1 .. "-" .. peca.valor2)
-
         return true
     end
 
-    print("IA não tem jogada válida, vai comprar")
+    -- Se não tem jogada, compra
+    print("IA difícil não tem jogada válida, vai comprar")
+    local conseguiuComprar = game:comprarAteEncontrarJogadaIA()
 
-    local conseguiu = game:comprarAteEncontrarJogadaIA()
+    -- Se comprou algo jogável, tenta jogar de novo
+    if conseguiuComprar then
+        jogadas = IADificil.buscarJogadasValidas(game)
+        print("Depois da compra, jogadas válidas:", #jogadas)
 
-    if conseguiu then
-        -- tenta jogar novamente agora que tem peça nova
-        return IADificil.jogada(game)
+        if #jogadas > 0 then
+            local escolhida = IADificil.escolherJogadaDificil(game, jogadas)
+            local peca = table.remove(game.maoIA, escolhida.indice)
+
+            if escolhida.lado == "esquerda" then
+                local inseriu = game.mesa:addFirst(peca.valor1, peca.valor2)
+                if not inseriu then
+                    print("Erro ao inserir peça comprada da IA na esquerda")
+                    table.insert(game.maoIA, peca)
+                    return false
+                end
+            else
+                local inseriu = game.mesa:addLast(peca.valor1, peca.valor2)
+                if not inseriu then
+                    print("Erro ao inserir peça comprada da IA na direita")
+                    table.insert(game.maoIA, peca)
+                    return false
+                end
+            end
+
+            print("IA difícil comprou e jogou:", peca.valor1 .. "-" .. peca.valor2)
+            return true
+        end
     end
 
-    print("IA passou a vez")
+    print("IA difícil passou a vez")
     return false
 end
 

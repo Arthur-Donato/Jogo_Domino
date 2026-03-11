@@ -5,7 +5,8 @@ local WIDTH, HEIGHT = love.window.getDesktopDimensions()
 local config = require "config"
 local IADificil = require "states.iaDificil"
 local tempoIA = 0
-local delayIA = 2
+local delayIA = 1
+local iaProcessando = false
 
 
 VEZ_DO_JOGADOR = true --Sempre começa na vez do jogador
@@ -283,45 +284,38 @@ love.graphics.rectangle("fill", 655, 670, 135, 75)
 end
 
 function Game:update(dt)
-
     local mx = love.mouse.getX()
     local my = love.mouse.getY()
 
-    for _,piece in ipairs(self.maoJogador) do
+    for _, piece in ipairs(self.maoJogador) do
         if mx > piece.x and
            mx < piece.x + piece.width and
            my > piece.y and
-           my < piece.y + piece.height
-        then
+           my < piece.y + piece.height then
             piece.isHovering = true
         else
             piece.isHovering = false
         end
     end
 
-    -- TURNO DA IA
     if VEZ_DO_JOGADOR == false then
-
         tempoIA = tempoIA + dt
 
-        if tempoIA >= delayIA then
+        if tempoIA >= delayIA and not iaProcessando then
+            iaProcessando = true
 
-            if self.dificuldade == "facil" then
-                IAFacil.jogada(self)
-
-            elseif self.dificuldade == "medio" then
-                IAFacil.jogada(self)
-
-            elseif self.dificuldade == "dificil" then
+            if self.dificuldade == "dificil" then
                 IADificil.jogada(self)
             end
 
             VEZ_DO_JOGADOR = true
             tempoIA = 0
+            iaProcessando = false
         end
-
+    else
+        tempoIA = 0
+        iaProcessando = false
     end
-
 end
 
 function Game:mousepressed(x, y, button, istouch)
@@ -383,21 +377,24 @@ end
 end
 
 function Game:comprarAteEncontrarJogadaIA()
-
     while #self.monte > 0 do
-
         local pecaComprada = table.remove(self.monte)
+
+        if not pecaComprada then
+            break
+        end
+
         table.insert(self.maoIA, pecaComprada)
 
         print("IA comprou:", pecaComprada.valor1 .. "-" .. pecaComprada.valor2)
 
         if self:pecaEncaixaNaMesa(pecaComprada) then
-            print("IA encontrou peça jogável!")
+            print("IA encontrou peça jogável após comprar")
             return true
         end
     end
 
-    print("Monte acabou, IA passou")
+    print("Monte acabou. IA passou a vez.")
     return false
 end
 
