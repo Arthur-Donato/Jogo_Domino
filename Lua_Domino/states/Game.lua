@@ -7,7 +7,10 @@ local IADificil = require "states.iaDificil"
 local tempoIA = 0
 local delayIA = 1
 local iaProcessando = false
-
+local tempoMostrarCompraIA = 0
+local delayMostrarCompraIA = 2.0
+local iaProcessando = false
+local iaEsperandoJogarDepoisDaCompra = false
 
 VEZ_DO_JOGADOR = true --Sempre começa na vez do jogador
 
@@ -299,22 +302,41 @@ function Game:update(dt)
     end
 
     if VEZ_DO_JOGADOR == false then
+
+        -- se a IA já comprou uma peça jogável e está esperando mostrar na mão
+        if iaEsperandoJogarDepoisDaCompra then
+            tempoMostrarCompraIA = tempoMostrarCompraIA + dt
+
+            if tempoMostrarCompraIA >= delayMostrarCompraIA then
+                iaEsperandoJogarDepoisDaCompra = false
+
+                if self.dificuldade == "dificil" then
+                    IADificil.jogada(self)
+                end
+
+                VEZ_DO_JOGADOR = true
+                tempoIA = 0
+                iaProcessando = false
+            end
+
+            return
+        end
+
         tempoIA = tempoIA + dt
 
         if tempoIA >= delayIA and not iaProcessando then
             iaProcessando = true
 
-            local jogou = false
-
             if self.dificuldade == "dificil" then
-                jogou = IADificil.jogada(self)
+                local resultado = IADificil.jogada(self)
+
+                -- só passa a vez se não ficou esperando jogar depois da compra
+                if not iaEsperandoJogarDepoisDaCompra then
+                    VEZ_DO_JOGADOR = true
+                    tempoIA = 0
+                    iaProcessando = false
+                end
             end
-
-            print("Resultado da jogada da IA:", jogou)
-
-            VEZ_DO_JOGADOR = true
-            tempoIA = 0
-            iaProcessando = false
         end
     else
         tempoIA = 0
@@ -333,7 +355,7 @@ function Game:mousepressed(x, y, button, istouch)
             self.mesa:addLast(piece.valor1, piece.valor2)
             table.remove(self.maoJogador, i)
             VEZ_DO_JOGADOR = false
-            print("Jogador jogou primeira peça:", piece.valor1, piece.valor2)
+            print("jogador jogou primeira peca:", piece.valor1, piece.valor2)
             return
         else
             local esquerda = self.mesa:getHeadValue()
@@ -343,17 +365,17 @@ function Game:mousepressed(x, y, button, istouch)
                 self.mesa:addFirst(piece.valor1, piece.valor2)
                 table.remove(self.maoJogador, i)
                 VEZ_DO_JOGADOR = false
-                print("Jogador jogou na esquerda:", piece.valor1, piece.valor2)
+                print("jogador jogou na esquerda:", piece.valor1, piece.valor2)
                 return
 
             elseif piece.valor1 == direita or piece.valor2 == direita then
                 self.mesa:addLast(piece.valor1, piece.valor2)
                 table.remove(self.maoJogador, i)
                 VEZ_DO_JOGADOR = false
-                print("Jogador jogou na direita:", piece.valor1, piece.valor2)
+                print("jogador jogou na direita:", piece.valor1, piece.valor2)
                 return
             else
-                print("Peça do jogador não encaixa")
+                print("peca do jogador nao encaixa")
                 return
             end
         end
@@ -368,7 +390,7 @@ end
             
             -- Se já existir peça jogável, não pode comprar
             if self:existePecaJogavel(self.maoJogador) then
-                print("Você já tem peça jogável! Não pode comprar.")
+                print("Voce ja tem peca jogavel! Nao pode comprar.")
                 return
             end
 
@@ -381,29 +403,35 @@ end
 end
 
 function Game:comprarAteEncontrarJogadaIA()
-    print("IA entrou na função de compra")
+    print("ia entrou na funcao de compra")
 
     while #self.monte > 0 do
         local pecaComprada = table.remove(self.monte)
 
         if not pecaComprada then
-            print("Nenhuma peça foi removida do monte")
+            print("nenhuma peca foi removida do monte")
             return false
         end
 
         table.insert(self.maoIA, pecaComprada)
 
-        print("IA comprou:", pecaComprada.valor1 .. "-" .. pecaComprada.valor2)
+        print("ia comprou:", pecaComprada.valor1 .. "-" .. pecaComprada.valor2)
+
+        love.timer.sleep(0.3)
 
         if self:pecaEncaixaNaMesa(pecaComprada) then
-            print("A peça comprada encaixa na mesa")
+            print("a peca comprada encaixa na mesa")
+
+            iaEsperandoJogarDepoisDaCompra = true
+            tempoMostrarCompraIA = 0
+
             return true
         else
-            print("A peça comprada NÃO encaixa na mesa")
+            print("a peca comprada nao encaixa na mesa")
         end
     end
 
-    print("Monte acabou. IA passou a vez.")
+    print("monte acabou. ia passou a vez.")
     return false
 end
 
@@ -414,9 +442,6 @@ function Game:pecaEncaixaNaMesa(peca)
 
     local esquerda = self.mesa:getHeadValue()
     local direita = self.mesa:getTailValue()
-
-    print("Testando encaixe da peça:", peca.valor1 .. "-" .. peca.valor2)
-    print("Mesa esquerda:", esquerda, "Mesa direita:", direita)
 
     if peca.valor1 == esquerda or
        peca.valor2 == esquerda or
@@ -442,15 +467,15 @@ function Game:comprarAteEncontrarJogada()
         local pecaComprada = table.remove(self.monte)
         table.insert(self.maoJogador, pecaComprada)
 
-        print("Jogador comprou uma peça")
+        print("jogador comprou uma peca")
 
         if self:pecaEncaixaNaMesa(pecaComprada) then
-            print("Peça comprada pode ser jogada!")
+            print("peca comprada pode ser jogada")
             return
         end
     end
 
-    print("Monte acabou. Jogador passou a vez.")
+    print("monte acabou. jogador passou a vez.")
 end
 
 return Game
