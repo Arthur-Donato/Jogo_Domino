@@ -1,6 +1,8 @@
 local GameState = require 'lib.GameState'
 local config = require 'config'
 
+DIFICULDADE_ESCOLHIDA = ""
+
 local btnDisposicaoTelaX = 0
 local btnSpaceY = 20 * config.scaleY -- Espaçamento entre os botões
 
@@ -122,17 +124,22 @@ function selecionarDificuldade:mousepressed(x, y, button, istouch)
         for _, botao in ipairs(self.botoes) do
             if botao.isHovering then
                 if botao.id == "voltar" then
-                    GameState.switch('menuInicial')
+                    GameState.switch('inserirNomeJogador')
                 elseif botao.id == "facil" then
-                    GameState.switch('Game', 'facil')
+                    DIFICULDADE_ESCOLHIDA = "Facil"
+                    GameState.switch('Game')
                 elseif botao.id == "medio" then
-                    GameState.switch('Game', 'medio')
+                    DIFICULDADE_ESCOLHIDA = "Medio"
+                    GameState.switch('Game')
                 elseif botao.id == "dificil" then
-                    GameState.switch('Game', 'dificil')
+                    DIFICULDADE_ESCOLHIDA = "Dificil"
+                    GameState.switch('Game')
                 end
             end
         end
     end
 end
+
+
 
 return selecionarDificuldade

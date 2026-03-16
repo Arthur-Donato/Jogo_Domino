@@ -1,24 +1,27 @@
-local GameState = require 'lib.GameState'
-local ListaDuplamenteEncadeada = require 'lib.ListaDuplamenteEncadeada'
-local Peca  = require 'lib.Peca'
-local WIDTH, HEIGHT = love.window.getDesktopDimensions()
-local config = require "config"
-local IADificil = require "states.iaDificil"
-local tempoIA = 0
-local delayIA = 1
-local iaProcessando = false
-local tempoMostrarCompraIA = 0
-local delayMostrarCompraIA = 2.0
-local iaProcessando = false
+local GameState                      = require 'lib.GameState'
+local ListaDuplamenteEncadeada       = require 'lib.ListaDuplamenteEncadeada'
+local Peca                           = require 'lib.Peca'
+local WIDTH, HEIGHT                  = love.window.getDesktopDimensions()
+local config                         = require "config"
+local iaFacil                        = require "lib.iaFacil"
+local iaMedio                        = require "lib.iaMedio"
+local IADificil                      = require "Lua_Domino.lib.iaDificil"
+local tempoIA                        = 0
+local delayIA                        = 1
+local iaProcessando                  = false
+local tempoMostrarCompraIA           = 0
+local delayMostrarCompraIA           = 2.0
+local iaProcessando                  = false
 local iaEsperandoJogarDepoisDaCompra = false
 
-VEZ_DO_JOGADOR = true --Sempre começa na vez do jogador
+VEZ_DO_JOGADOR                       = true --Sempre começa na vez do jogador
+GAME_OVER                            = false
 
-local Game = {
+local Game                           = {
     botaoComprar = {
-        x = config.WIDTH - config.btnResponsiveX - 20, --20 de margem direita
-        y = config.HEIGHT - config.btnResponsiveY -240,-- 2x tamnho da peça + 40 sobrando, alterar posteiormente
-        width = config.btnResponsiveX-80 ,
+        x = config.WIDTH - config.btnResponsiveX - 20,  --20 de margem direita
+        y = config.HEIGHT - config.btnResponsiveY - 240, -- 2x tamnho da peça + 40 sobrando, alterar posteiormente
+        width = config.btnResponsiveX - 80,
         height = config.btnResponsiveY,
         text = "Comprar",
         isHovering = false,
@@ -30,70 +33,70 @@ local Game = {
     mesa = ListaDuplamenteEncadeada.new(),
 }
 local function calcular_disposicao_pecas_Mao(pecas, entidade)
-    local posicaoAtualX = 0 
+    local posicaoAtualX = 0
     local posicaoAtualY = 0
     if entidade == "jogador" then
-        posicaoAtualY = config.HEIGHT - 20 - 160 --20 de margem inferior e 160 altura da peça(alterar para variável posteriormente
-
-    elseif entidade =="IA" then
+        posicaoAtualY = config.HEIGHT - 20 -
+        160                                      --20 de margem inferior e 160 altura da peça(alterar para variável posteriormente
+    elseif entidade == "IA" then
         posicaoAtualY = 20 --20 de margem superior
     end
 
-    if #pecas%2 == 0 then
-        posicaoAtualX = (config.WIDTH/2) - ((#pecas/2) * (100 + 20)) --100 largura da peça e 20 espaçamento entre as peças(alterar para variável posteriormente)
+    if #pecas % 2 == 0 then
+        posicaoAtualX = (config.WIDTH / 2) -
+        ((#pecas / 2) * (100 + 20))                                                      --100 largura da peça e 20 espaçamento entre as peças(alterar para variável posteriormente)
     else
-        posicaoAtualX = (config.WIDTH/2) - (math.floor(#pecas/2) * (100 + 20)) - (100/2) --100 largura da peça e 20 espaçamento entre as peças(alterar para variável posteriormente)
+        posicaoAtualX = (config.WIDTH / 2) - (math.floor(#pecas / 2) * (100 + 20)) -
+        (100 / 2)                                                                        --100 largura da peça e 20 espaçamento entre as peças(alterar para variável posteriormente)
     end
 
-        for _,piece in ipairs(pecas) do
-            piece.x = posicaoAtualX
-            piece.y = posicaoAtualY
+    for _, piece in ipairs(pecas) do
+        piece.x = posicaoAtualX
+        piece.y = posicaoAtualY
 
 
-            posicaoAtualX = posicaoAtualX + piece.width + 20
-        end
-    
+        posicaoAtualX = posicaoAtualX + piece.width + 20
+    end
 end
 
 
-local function imprimirPecas(x,y,pecas)
-    calcular_disposicao_pecas_Mao(pecas,"jogador")
-    for _,piece in ipairs(pecas) do--NOTE:
+local function imprimirPecas(x, y, pecas)
+    calcular_disposicao_pecas_Mao(pecas, "jogador")
+    for _, piece in ipairs(pecas) do --NOTE:
         if piece.isHovering and VEZ_DO_JOGADOR then
-            love.graphics.setColor(1,1,1,1)
+            love.graphics.setColor(1, 1, 1, 1)
         else
             love.graphics.setColor(0.9, 0.9, 0.9, 1)
         end
         if x > piece.x and
-        x < piece.x + piece.width and
-        y > piece.y and
-        y < piece.y + piece.height
+            x < piece.x + piece.width and
+            y > piece.y and
+            y < piece.y + piece.height
         then
             piece.isHovering = true
         else
             piece.isHovering = false
         end
-            
-        love.graphics.draw(piece.img,piece.x,piece.y)
+
+        love.graphics.draw(piece.img, piece.x, piece.y)
     end
-        
-        love.graphics.setColor(1,1,1,1)
-    
+
+    love.graphics.setColor(1, 1, 1, 1)
 end
 
 local function imprimirPecasIA()
-    calcular_disposicao_pecas_Mao(Game.maoIA,"IA")
-        for _,piece in ipairs(Game.maoIA) do--NOTE:
-            love.graphics.draw(piece.img,piece.x,piece.y)
-        end
+    calcular_disposicao_pecas_Mao(Game.maoIA, "IA")
+    for _, piece in ipairs(Game.maoIA) do    --NOTE:
+        love.graphics.draw(piece.img, piece.x, piece.y)
+    end
 end
 
 
 local function criarPecas(monte)
-        for i=0,6 do
-        for j=i,6 do
-            local imagemPeca = love.graphics.newImage("images/"..i.."-"..j..".png")--carrega a imagem da peça
-            print("images/"..i.."-"..j..".png")
+    for i = 0, 6 do
+        for j = i, 6 do
+            local imagemPeca = love.graphics.newImage("images/" .. i .. "-" .. j .. ".png") --carrega a imagem da peça
+            print("images/" .. i .. "-" .. j .. ".png")
             local novaPeca = {
                 valor1 = i,
                 valor2 = j,
@@ -104,8 +107,7 @@ local function criarPecas(monte)
                 height = 160,
                 isHovering = false
             }
-            table.insert(monte,novaPeca)
-
+            table.insert(monte, novaPeca)
         end
     end
 end
@@ -124,12 +126,11 @@ function Game:enter(dificuldade)
     DistribuirPecas(self.monte)
 end
 
-
 function Embaralhar(monte)
     local j
     for i = #monte, 2, -1 do
         j = love.math.random(i)
-        monte[i], monte[j] = monte[j], monte[i]--OBS
+        monte[i], monte[j] = monte[j], monte[i] --OBS
     end
     return monte
 end
@@ -146,28 +147,26 @@ end
 
 function DistribuirPecas(monte)
     Game.monte = Embaralhar(monte)
-    for i=1,7 do
+    for i = 1, 7 do
         local peca = table.remove(Game.monte)
-        table.insert(Game.maoJogador,peca)
+        table.insert(Game.maoJogador, peca)
 
         peca = table.remove(Game.monte)
         --peca.img = love.graphics.newImage("images/pecaVazia.png") Retirei para testes futuros
-        table.insert(Game.maoIA,peca)
+        table.insert(Game.maoIA, peca)
     end
-
-
 end
 
-local function imprimirBotaoCompra(x,y, botao)
+local function imprimirBotaoCompra(x, y, botao)
     if botao.isHovering and VEZ_DO_JOGADOR then
         love.graphics.setColor(0.8, 0.8, 0.8, 1)
     else
-        love.graphics.setColor(1,1,1,1)
+        love.graphics.setColor(1, 1, 1, 1)
     end
     if x > botao.x and
-       x < botao.x + botao.width and
-       y > botao.y and
-       y < botao.y + botao.height
+        x < botao.x + botao.width and
+        y > botao.y and
+        y < botao.y + botao.height
     then
         botao.isHovering = true
     else
@@ -176,125 +175,141 @@ local function imprimirBotaoCompra(x,y, botao)
 
     --botao comprar
     love.graphics.rectangle("fill", botao.x, botao.y, botao.width, botao.height)
-    love.graphics.setColor(0,0,0,1)
+    love.graphics.setColor(0, 0, 0, 1)
     love.graphics.rectangle("line", botao.x, botao.y, botao.width, botao.height)
     local posicaoTexto = botao.y + (botao.height / 2) - (botao.fonte:getHeight() / 2)
     love.graphics.printf(botao.text, botao.x, posicaoTexto, botao.width, "center")
-    love.graphics.setColor(1,1,1,1)
+    love.graphics.setColor(1, 1, 1, 1)
 end
 
 
 function Game:draw()
     local mx = love.mouse.getX()
     local my = love.mouse.getY()
-    
+
 
     love.graphics.clear(0.953, 0.953, 0.953, 1)
 
-    imprimirBotaoCompra(mx,my,self.botaoComprar)
-    imprimirPecas(mx,my,self.maoJogador)
+    imprimirBotaoCompra(mx, my, self.botaoComprar)
+    imprimirPecas(mx, my, self.maoJogador)
     imprimirPecasIA(self.maoIA)
 
---COMEÇAR OS TESTES PARA O DESENHO FINAL DO TABULEIRO, ONDE TODAS AS PEÇAS SERÃO COLOCADAS
+    --COMEÇAR OS TESTES PARA O DESENHO FINAL DO TABULEIRO, ONDE TODAS AS PEÇAS SERÃO COLOCADAS
 
-love.graphics.setColor(0,1,0,1)
+    love.graphics.setColor(0, 1, 0, 1)
 
-love.graphics.rectangle("fill", 655, 475, 135, 75)
+    love.graphics.rectangle("fill", 655, 475, 135, 75)
 
-love.graphics.setColor(1,0,0,1)
-love.graphics.rectangle("fill", 790, 475, 135, 75)
+    love.graphics.setColor(1, 0, 0, 1)
+    love.graphics.rectangle("fill", 790, 475, 135, 75)
 
-love.graphics.setColor(0,0,0,1)
-love.graphics.rectangle("fill", 925, 475, 135, 75)
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.rectangle("fill", 925, 475, 135, 75)
 
-love.graphics.setColor(1,0,0,1)
-love.graphics.rectangle("fill", 1060, 475, 135, 75)
+    love.graphics.setColor(1, 0, 0, 1)
+    love.graphics.rectangle("fill", 1060, 475, 135, 75)
 
-love.graphics.setColor(0,0,0,1)
-love.graphics.rectangle("fill", 1195, 475, 135, 75)
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.rectangle("fill", 1195, 475, 135, 75)
 
-love.graphics.setColor(0,0,0,1)
-love.graphics.rectangle("fill", 520, 475, 135, 75)
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.rectangle("fill", 520, 475, 135, 75)
 
-love.graphics.setColor(1,0,0,1)
-love.graphics.rectangle("fill", 385, 475, 135, 75)
+    love.graphics.setColor(1, 0, 0, 1)
+    love.graphics.rectangle("fill", 385, 475, 135, 75)
 
-love.graphics.setColor(0,0,0,1)
-love.graphics.rectangle("fill", 250, 475, 135, 75)
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.rectangle("fill", 250, 475, 135, 75)
 
-love.graphics.setColor(1,0,0,1)
-love.graphics.rectangle("fill", 115, 475, 135, 75)
+    love.graphics.setColor(1, 0, 0, 1)
+    love.graphics.rectangle("fill", 115, 475, 135, 75)
 
-love.graphics.setColor(1,0,0,1)
-love.graphics.rectangle("fill", 1330, 415, 75, 135)
+    love.graphics.setColor(1, 0, 0, 1)
+    love.graphics.rectangle("fill", 1330, 415, 75, 135)
 
-love.graphics.setColor(0,0,0,1)
-love.graphics.rectangle("fill", 1330, 280, 75, 135)
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.rectangle("fill", 1330, 280, 75, 135)
 
-love.graphics.setColor(1,0,0,1)
-love.graphics.rectangle("fill", 1195, 280, 135, 75)
+    love.graphics.setColor(1, 0, 0, 1)
+    love.graphics.rectangle("fill", 1195, 280, 135, 75)
 
-love.graphics.setColor(0,0,0,1)
-love.graphics.rectangle("fill", 1060, 280, 135, 75)
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.rectangle("fill", 1060, 280, 135, 75)
 
-love.graphics.setColor(1,0,0,1)
-love.graphics.rectangle("fill", 925, 280, 135, 75)
+    love.graphics.setColor(1, 0, 0, 1)
+    love.graphics.rectangle("fill", 925, 280, 135, 75)
 
-love.graphics.setColor(0,0,0,1)
-love.graphics.rectangle("fill", 790, 280, 135, 75)
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.rectangle("fill", 790, 280, 135, 75)
 
-love.graphics.setColor(1,0,0,1)
-love.graphics.rectangle("fill", 655, 280, 135, 75)
+    love.graphics.setColor(1, 0, 0, 1)
+    love.graphics.rectangle("fill", 655, 280, 135, 75)
 
-love.graphics.setColor(0,0,0,1)
-love.graphics.rectangle("fill", 520, 280, 135, 75)
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.rectangle("fill", 520, 280, 135, 75)
 
-love.graphics.setColor(1,0,0,1)
-love.graphics.rectangle("fill", 385, 280, 135, 75)
+    love.graphics.setColor(1, 0, 0, 1)
+    love.graphics.rectangle("fill", 385, 280, 135, 75)
 
-love.graphics.setColor(0,0,0,1)
-love.graphics.rectangle("fill", 250, 280, 135, 75)
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.rectangle("fill", 250, 280, 135, 75)
 
-love.graphics.setColor(1,0,0,1)
-love.graphics.rectangle("fill", 115, 280, 135, 75)
-
-
---PEÇAS RESTANTES NA PARTE INFERIOR DO TABULEIRO
+    love.graphics.setColor(1, 0, 0, 1)
+    love.graphics.rectangle("fill", 115, 280, 135, 75)
 
 
-love.graphics.setColor(0,0,0,1)
-love.graphics.rectangle("fill", 40, 475, 75, 135)
+    --PEÇAS RESTANTES NA PARTE INFERIOR DO TABULEIRO
 
-love.graphics.setColor(1,0,0,1)
-love.graphics.rectangle("fill", 40, 610, 75, 135)
 
-love.graphics.setColor(0,0,0,1)
-love.graphics.rectangle("fill", 115, 670, 135, 75)
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.rectangle("fill", 40, 475, 75, 135)
 
-love.graphics.setColor(1,0,0,1)
-love.graphics.rectangle("fill", 250, 670, 135, 75)
+    love.graphics.setColor(1, 0, 0, 1)
+    love.graphics.rectangle("fill", 40, 610, 75, 135)
 
-love.graphics.setColor(0,0,0,1)
-love.graphics.rectangle("fill", 385, 670, 135, 75)
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.rectangle("fill", 115, 670, 135, 75)
 
-love.graphics.setColor(1,0,0,1)
-love.graphics.rectangle("fill", 520, 670, 135, 75)
+    love.graphics.setColor(1, 0, 0, 1)
+    love.graphics.rectangle("fill", 250, 670, 135, 75)
 
-love.graphics.setColor(0,0,0,1)
-love.graphics.rectangle("fill", 655, 670, 135, 75)
-    
-    
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.rectangle("fill", 385, 670, 135, 75)
+
+    love.graphics.setColor(1, 0, 0, 1)
+    love.graphics.rectangle("fill", 520, 670, 135, 75)
+
+    love.graphics.setColor(0, 0, 0, 1)
+    love.graphics.rectangle("fill", 655, 670, 135, 75)
+
+    --QUAIS AVISOS SAO NECESSARIOS PARA SEREM MOSTRADOS NA TELA (VEZ DO JOGADOR, VEZ DO OPONENTE, OPONENTE COMPRANDO E JOGO TRAVADO)
+
+    love.graphics.setColor(0, 0, 0, 1)
+    if VEZ_DO_JOGADOR then
+        love.graphics.printf("Vez do jogador...", 1500, 300, 400, "center")
+    elseif not VEZ_DO_JOGADOR and not self:existePecaJogavel(self.maoIA) then
+        love.graphics.printf("Oponente esta comprando...", 1500, 300, 400, "center")
+    elseif not VEZ_DO_JOGADOR and self:existePecaJogavel(self.maoIA) then
+        love.graphics.printf("Vez do oponente...", 1500, 300, 400, "center")
+    elseif (VEZ_DO_JOGADOR and not self:existePecaJogavel(self.maoJogador)) and (not VEZ_DO_JOGADOR and not self:existePecaJogavel(self.maoIA)) and self.monte.isEmpty() then
+        love.graphics.printf("O jogo travou...", 1500, 300, 400, "center")
+    end
 end
 
 function Game:update(dt)
+    if GAME_OVER then
+        return
+    end
+
     local mx = love.mouse.getX()
     local my = love.mouse.getY()
 
     for _, piece in ipairs(self.maoJogador) do
         if mx > piece.x and
-           mx < piece.x + piece.width and
-           my > piece.y and
-           my < piece.y + piece.height then
+            mx < piece.x + piece.width and
+            my > piece.y and
+            my < piece.y + piece.height and
+            self:pecaEncaixaNaMesa(piece) then
             piece.isHovering = true
         else
             piece.isHovering = false
@@ -302,7 +317,6 @@ function Game:update(dt)
     end
 
     if VEZ_DO_JOGADOR == false then
-
         -- se a IA já comprou uma peça jogável e está esperando mostrar na mão
         if iaEsperandoJogarDepoisDaCompra then
             tempoMostrarCompraIA = tempoMostrarCompraIA + dt
@@ -310,10 +324,15 @@ function Game:update(dt)
             if tempoMostrarCompraIA >= delayMostrarCompraIA then
                 iaEsperandoJogarDepoisDaCompra = false
 
-                if self.dificuldade == "dificil" then
+                if DIFICULDADE_ESCOLHIDA == "Facil" then
+                    iaFacil.jogada(self)
+                elseif DIFICULDADE_ESCOLHIDA == "Medio" then
+                    iaMedio.jogada(self)
+                elseif DIFICULDADE_ESCOLHIDA == "Dificil" then
                     IADificil.jogada(self)
                 end
 
+                self:verificarFimDeJogo()
                 VEZ_DO_JOGADOR = true
                 tempoIA = 0
                 iaProcessando = false
@@ -327,11 +346,35 @@ function Game:update(dt)
         if tempoIA >= delayIA and not iaProcessando then
             iaProcessando = true
 
-            if self.dificuldade == "dificil" then
+            if DIFICULDADE_ESCOLHIDA == "Facil" then
+                local resultado = iaFacil.jogada(self)
+
+                -- só passa a vez se não ficou esperando jogar depois da compra
+                if not iaEsperandoJogarDepoisDaCompra then
+                    self:verificarFimDeJogo()
+                    VEZ_DO_JOGADOR = true
+                    tempoIA = 0
+                    iaProcessando = false
+                end
+            end
+
+            if DIFICULDADE_ESCOLHIDA == "Medio" then
+                local resultado = iaMedio.jogada(self)
+
+                -- só passa a vez se não ficou esperando jogar depois da compra
+                if not iaEsperandoJogarDepoisDaCompra then
+                    self:verificarFimDeJogo()
+                    VEZ_DO_JOGADOR = true
+                    tempoIA = 0
+                    iaProcessando = false
+                end
+            end
+            if DIFICULDADE_ESCOLHIDA == "Dificil" then
                 local resultado = IADificil.jogada(self)
 
                 -- só passa a vez se não ficou esperando jogar depois da compra
                 if not iaEsperandoJogarDepoisDaCompra then
+                    self:verificarFimDeJogo()
                     VEZ_DO_JOGADOR = true
                     tempoIA = 0
                     iaProcessando = false
@@ -345,61 +388,63 @@ function Game:update(dt)
 end
 
 function Game:mousepressed(x, y, button, istouch)
-    if VEZ_DO_JOGADOR == true then
-        
-        if button == 1 then
-            
-            for i, piece in ipairs(self.maoJogador) do
-    if piece.isHovering == true then
-        if self.mesa:isEmpty() then
-            self.mesa:addLast(piece.valor1, piece.valor2)
-            table.remove(self.maoJogador, i)
-            VEZ_DO_JOGADOR = false
-            print("jogador jogou primeira peca:", piece.valor1, piece.valor2)
-            return
-        else
-            local esquerda = self.mesa:getHeadValue()
-            local direita = self.mesa:getTailValue()
-
-            if piece.valor1 == esquerda or piece.valor2 == esquerda then
-                self.mesa:addFirst(piece.valor1, piece.valor2)
-                table.remove(self.maoJogador, i)
-                VEZ_DO_JOGADOR = false
-                print("jogador jogou na esquerda:", piece.valor1, piece.valor2)
-                return
-
-            elseif piece.valor1 == direita or piece.valor2 == direita then
-                self.mesa:addLast(piece.valor1, piece.valor2)
-                table.remove(self.maoJogador, i)
-                VEZ_DO_JOGADOR = false
-                print("jogador jogou na direita:", piece.valor1, piece.valor2)
-                return
-            else
-                print("peca do jogador nao encaixa")
-                return
-            end
-        end
+    if GAME_OVER then
+        return
     end
-end
+
+    if VEZ_DO_JOGADOR == true then
+        if button == 1 then
+            for i, piece in ipairs(self.maoJogador) do
+                if piece.isHovering == true then
+                    if self.mesa:isEmpty() then
+                        self.mesa:addLast(piece.valor1, piece.valor2)
+                        table.remove(self.maoJogador, i)
+                        self:verificarFimDeJogo()
+                        VEZ_DO_JOGADOR = false
+                        print("jogador jogou primeira peca:", piece.valor1, piece.valor2)
+                        return
+                    else
+                        local esquerda = self.mesa:getHeadValue()
+                        local direita = self.mesa:getTailValue()
+
+                        if piece.valor1 == esquerda or piece.valor2 == esquerda then
+                            self.mesa:addFirst(piece.valor1, piece.valor2)
+                            table.remove(self.maoJogador, i)
+                            self:verificarFimDeJogo()
+                            VEZ_DO_JOGADOR = false
+                            print("jogador jogou na esquerda:", piece.valor1, piece.valor2)
+                            return
+                        elseif piece.valor1 == direita or piece.valor2 == direita then
+                            self.mesa:addLast(piece.valor1, piece.valor2)
+                            table.remove(self.maoJogador, i)
+                            self:verificarFimDeJogo()
+                            VEZ_DO_JOGADOR = false
+                            print("jogador jogou na direita:", piece.valor1, piece.valor2)
+                            return
+                        else
+                            print("peca do jogador nao encaixa")
+                            return
+                        end
+                    end
+                end
+            end
 
             if x > self.botaoComprar.x and
-               x < self.botaoComprar.x + self.botaoComprar.width and
-               y > self.botaoComprar.y and
-               y < self.botaoComprar.y + self.botaoComprar.height
+                x < self.botaoComprar.x + self.botaoComprar.width and
+                y > self.botaoComprar.y and
+                y < self.botaoComprar.y + self.botaoComprar.height
             then
-            
-            -- Se já existir peça jogável, não pode comprar
-            if self:existePecaJogavel(self.maoJogador) then
-                print("Voce ja tem peca jogavel! Nao pode comprar.")
-                return
-            end
+                -- Se já existir peça jogável, não pode comprar
+                if self:existePecaJogavel(self.maoJogador) then
+                    print("Voce ja tem peca jogavel! Nao pode comprar.")
+                    return
+                end
 
-            -- Senão compra até achar ou acabar o monte
-            self:comprarAteEncontrarJogada()
-        end
+                -- Senão compra até achar ou acabar o monte
+                self:comprarAteEncontrarJogada()
+            end
         end
     end
-   
 end
 
 function Game:comprarAteEncontrarJogadaIA()
@@ -444,14 +489,15 @@ function Game:pecaEncaixaNaMesa(peca)
     local direita = self.mesa:getTailValue()
 
     if peca.valor1 == esquerda or
-       peca.valor2 == esquerda or
-       peca.valor1 == direita or
-       peca.valor2 == direita then
+        peca.valor2 == esquerda or
+        peca.valor1 == direita or
+        peca.valor2 == direita then
         return true
     end
 
     return false
 end
+
 function Game:existePecaJogavel(mao)
     for _, peca in ipairs(mao) do
         if self:pecaEncaixaNaMesa(peca) then
@@ -463,7 +509,6 @@ end
 
 function Game:comprarAteEncontrarJogada()
     while #self.monte > 0 do
-            
         local pecaComprada = table.remove(self.monte)
         table.insert(self.maoJogador, pecaComprada)
 
@@ -476,6 +521,63 @@ function Game:comprarAteEncontrarJogada()
     end
 
     print("monte acabou. jogador passou a vez.")
+end
+
+function Game:somarPontos(mao)
+    local soma = 0
+
+    for _, peca in ipairs(mao) do
+        soma = soma + peca.valor1 + peca.valor2
+    end
+
+    return soma
+end
+
+function Game:verificarFimDeJogo()
+    -- jogador venceu
+    if #self.maoJogador == 0 then
+        print("Jogador venceu!")
+        GAME_OVER = true
+        return true
+    end
+
+    -- IA venceu
+    if #self.maoIA == 0 then
+        print("IA venceu!")
+        GAME_OVER = true
+        return true
+    end
+
+    -- verificar bloqueio
+    if #self.monte == 0 then
+        local jogadorPode = self:existePecaJogavel(self.maoJogador)
+        local iaPode = self:existePecaJogavel(self.maoIA)
+
+        if not jogadorPode and not iaPode then
+            print("Jogo travado!")
+
+            local pontosJogador = self:somarPontos(self.maoJogador)
+            local pontosIA = self:somarPontos(self.maoIA)
+
+            print("Pontos Jogador:", pontosJogador)
+            print("Pontos IA:", pontosIA)
+
+            if pontosJogador < pontosIA then
+                print("Jogador venceu por menos pontos!")
+                GAME_OVER = true
+            elseif pontosIA < pontosJogador then
+                print("IA venceu por menos pontos!")
+                GAME_OVER = true
+            else
+                print("Empate!")
+                GAME_OVER = true
+            end
+
+            return true
+        end
+    end
+
+    return false
 end
 
 return Game
