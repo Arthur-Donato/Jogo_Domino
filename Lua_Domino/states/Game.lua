@@ -122,6 +122,9 @@ function Game:enter(dificuldade)
     self.monte = {}
     self.mesa = ListaDuplamenteEncadeada.new()
 
+    VEZ_DO_JOGADOR = true
+    GAME_OVER = false
+
     criarPecas(self.monte)
     DistribuirPecas(self.monte)
 end
