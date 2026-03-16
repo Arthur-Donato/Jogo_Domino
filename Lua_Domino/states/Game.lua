@@ -5,14 +5,14 @@ local WIDTH, HEIGHT                  = love.window.getDesktopDimensions()
 local config                         = require "config"
 local iaFacil                        = require "lib.iaFacil"
 local iaMedio                        = require "lib.iaMedio"
-local IADificil                      = require "Lua_Domino.lib.iaDificil"
+local IADificil                      = require "lib.iaDificil"
 local tempoIA                        = 0
 local delayIA                        = 1
-local iaProcessando                  = false
 local tempoMostrarCompraIA           = 0
 local delayMostrarCompraIA           = 2.0
 local iaProcessando                  = false
 local iaEsperandoJogarDepoisDaCompra = false
+
 
 VEZ_DO_JOGADOR                       = true --Sempre começa na vez do jogador
 GAME_OVER                            = false
@@ -291,7 +291,7 @@ function Game:draw()
         love.graphics.printf("Oponente esta comprando...", 1500, 300, 400, "center")
     elseif not VEZ_DO_JOGADOR and self:existePecaJogavel(self.maoIA) then
         love.graphics.printf("Vez do oponente...", 1500, 300, 400, "center")
-    elseif (VEZ_DO_JOGADOR and not self:existePecaJogavel(self.maoJogador)) and (not VEZ_DO_JOGADOR and not self:existePecaJogavel(self.maoIA)) and self.monte.isEmpty() then
+    elseif (#self.monte == 0) and (not self:existePecaJogavel(self.maoJogador)) and (not self:existePecaJogavel(self.maoIA)) then
         love.graphics.printf("O jogo travou...", 1500, 300, 400, "center")
     end
 end
@@ -455,6 +455,7 @@ function Game:comprarAteEncontrarJogadaIA()
 
         if not pecaComprada then
             print("nenhuma peca foi removida do monte")
+            self:verificarFimDeJogo()
             return false
         end
 
@@ -469,7 +470,6 @@ function Game:comprarAteEncontrarJogadaIA()
 
             iaEsperandoJogarDepoisDaCompra = true
             tempoMostrarCompraIA = 0
-
             return true
         else
             print("a peca comprada nao encaixa na mesa")
@@ -477,6 +477,7 @@ function Game:comprarAteEncontrarJogadaIA()
     end
 
     print("monte acabou. ia passou a vez.")
+    self:verificarFimDeJogo()
     return false
 end
 
@@ -516,11 +517,13 @@ function Game:comprarAteEncontrarJogada()
 
         if self:pecaEncaixaNaMesa(pecaComprada) then
             print("peca comprada pode ser jogada")
+            self:verificarFimDeJogo()
             return
         end
     end
 
     print("monte acabou. jogador passou a vez.")
+    self:verificarFimDeJogo()
 end
 
 function Game:somarPontos(mao)
@@ -534,47 +537,51 @@ function Game:somarPontos(mao)
 end
 
 function Game:verificarFimDeJogo()
-    -- jogador venceu
+    -- vitória normal
     if #self.maoJogador == 0 then
-        print("Jogador venceu!")
         GAME_OVER = true
+        GameState.switch("Vencedor", "jogador", "O jogador humano ficou sem peças.")
         return true
     end
 
-    -- IA venceu
     if #self.maoIA == 0 then
-        print("IA venceu!")
         GAME_OVER = true
+        GameState.switch("Vencedor", "ia", "A IA ficou sem peças.")
         return true
     end
 
-    -- verificar bloqueio
-    if #self.monte == 0 then
-        local jogadorPode = self:existePecaJogavel(self.maoJogador)
-        local iaPode = self:existePecaJogavel(self.maoIA)
+    -- travamento do jogo
+    local monteAcabou = (#self.monte == 0)
+    local jogadorPodeJogar = self:existePecaJogavel(self.maoJogador)
+    local iaPodeJogar = self:existePecaJogavel(self.maoIA)
 
-        if not jogadorPode and not iaPode then
-            print("Jogo travado!")
+    if monteAcabou and not jogadorPodeJogar and not iaPodeJogar then
+        local pontosJogador = self:somarPontos(self.maoJogador)
+        local pontosIA = self:somarPontos(self.maoIA)
 
-            local pontosJogador = self:somarPontos(self.maoJogador)
-            local pontosIA = self:somarPontos(self.maoIA)
+        GAME_OVER = true
 
-            print("Pontos Jogador:", pontosJogador)
-            print("Pontos IA:", pontosIA)
-
-            if pontosJogador < pontosIA then
-                print("Jogador venceu por menos pontos!")
-                GAME_OVER = true
-            elseif pontosIA < pontosJogador then
-                print("IA venceu por menos pontos!")
-                GAME_OVER = true
-            else
-                print("Empate!")
-                GAME_OVER = true
-            end
-
-            return true
+        if pontosJogador < pontosIA then
+            GameState.switch(
+                "Vencedor",
+                "jogador",
+                "Jogo travado. Jogador venceu por menos pontos: " .. pontosJogador .. " x " .. pontosIA
+            )
+        elseif pontosIA < pontosJogador then
+            GameState.switch(
+                "Vencedor",
+                "ia",
+                "Jogo travado. IA venceu por menos pontos: " .. pontosIA .. " x " .. pontosJogador
+            )
+        else
+            GameState.switch(
+                "Vencedor",
+                "empate",
+                "Jogo travado com empate em pontos: " .. pontosJogador .. " x " .. pontosIA
+            )
         end
+
+        return true
     end
 
     return false

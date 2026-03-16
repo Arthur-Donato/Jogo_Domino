@@ -9,6 +9,7 @@ function love.load()
     GameState.register("sairJogo", require 'states.SairJogo')
     GameState.register("historico", require 'states.Historico')
     GameState.register("Game", require 'states.Game')
+    GameState.register('Vencedor', require 'states.Vencedor')
 
     -- pega o tamanho da tela do computador e cria a janela de acordo
     local width,height = love.window.getDesktopDimensions()
