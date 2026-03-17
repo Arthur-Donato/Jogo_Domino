@@ -1,7 +1,10 @@
 local GameState = require 'lib.GameState'
 local config = require 'config'
 
-local historico = {}
+local historico = {
+
+    listaRanking = {}
+}
 
 local function calcularPosicaoDoBotao(botao)
     local posicaoAtualX = config.WIDTH - botao.width * 1.25
@@ -25,6 +28,27 @@ function historico:enter()
     
 
     calcularPosicaoDoBotao(self.botaoVoltar)
+
+    self.listaRanking = {}
+
+    local query = [[
+        SELECT nome_jogador, SUM(pontuacao) as pontuacao_total
+        FROM historico_partidas
+        GROUP BY nome_jogador
+        ORDER BY pontuacao_total desc
+        LIMIT 5 
+    ]]
+    
+    local posicao = 1
+    for linha in DB:nrows(query) do
+        table.insert(self.listaRanking, {
+            posicao = posicao,
+            nome = linha.nome_jogador,
+            pontuacao = linha.pontuacao_total
+        })
+
+        posicao = posicao + 1
+    end
 end
 
 function historico:draw()
@@ -52,7 +76,25 @@ function historico:draw()
     local posicaoTexto = self.botaoVoltar.y + (self.botaoVoltar.height / 2) - (self.fonteBotoes:getHeight() / 2)
 
     love.graphics.printf(self.botaoVoltar.text, self.botaoVoltar.x, posicaoTexto, self.botaoVoltar.width, "center")
+
     --CRIAR UM LACO DE REPETICAO PARA ADICIONAR AS PARTIDAS QUE APARECERAO NO HISTORICO
+
+    love.graphics.setColor(0, 0, 0, 1)
+    
+    love.graphics.print("--- TOP 10 JOGADORES ---", 300, 50)
+
+    -- Percorre a tabela que preenchemos lá no enter()
+    for i, jogador in ipairs(self.listaRanking) do
+        -- Calcula o espaçamento vertical (Y) para cada linha ficar embaixo da outra
+        local posicaoY = 100 + (i * 35) 
+        
+        -- Monta o texto bonitinho. Ex: "1º - Arthur: 150 pts (Difícil)"
+        local texto = jogador.posicao .. "º - " .. jogador.nome .. ": " .. jogador.pontuacao .. " pts"
+        
+        love.graphics.print(texto, 300, posicaoY)
+    end
+    
+    love.graphics.setColor(1, 1, 1, 1)
 end
 
 function historico:update()
