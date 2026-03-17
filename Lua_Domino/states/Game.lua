@@ -294,6 +294,8 @@ function Game:draw()
         love.graphics.printf("Oponente esta comprando...", 1500, 300, 400, "center")
     elseif not VEZ_DO_JOGADOR and self:existePecaJogavel(self.maoIA) then
         love.graphics.printf("Vez do oponente...", 1500, 300, 400, "center")
+    elseif (#self.monte == 0) and (not self:existePecaJogavel(self.maoJogador)) and self:existePecaJogavel(self.maoIA) then
+        VEZ_DO_JOGADOR = false
     elseif (#self.monte == 0) and (not self:existePecaJogavel(self.maoJogador)) and (not self:existePecaJogavel(self.maoIA)) then
         love.graphics.printf("O jogo travou...", 1500, 300, 400, "center")
     end
@@ -558,7 +560,7 @@ function Game:verificarFimDeJogo()
     local jogadorPodeJogar = self:existePecaJogavel(self.maoJogador)
     local iaPodeJogar = self:existePecaJogavel(self.maoIA)
 
-    if monteAcabou and not jogadorPodeJogar and not iaPodeJogar then
+    if monteAcabou and not jogadorPodeJogar and not iaPodeJogar and self.maoJogador ~= 0 and self.maoIA ~= 0 then
         local pontosJogador = self:somarPontos(self.maoJogador)
         local pontosIA = self:somarPontos(self.maoIA)
 

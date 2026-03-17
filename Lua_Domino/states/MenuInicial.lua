@@ -38,7 +38,7 @@ function menuInicial:enter()
             id = "botaoHistorico",
             width = config.btnResponsiveX,
             height = config.btnResponsiveY,
-            text = "Histórico",
+            text = "Ranking",
             x = 0,
             y = 0,
             isHovering = false
@@ -140,7 +140,7 @@ function menuInicial:mousepressed(x, y, button, istouch)
         end
 
         if self.botoes[2].isHovering then
-            GameState.switch('historico')
+            GameState.switch('ranking')
         end
 
         if self.botoes[3].isHovering then

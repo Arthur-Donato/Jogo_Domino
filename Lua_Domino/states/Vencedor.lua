@@ -58,7 +58,6 @@ function Vencedor:inserirDadosNoBancoDeDados()
         if self.vencedor == "jogador" then
             stmt:bind_values(NomeUsuario.nomeJogador, 3, DIFICULDADE_ESCOLHIDA)
             
-        
         elseif self.vencedor == "ia" then
             stmt:bind_values(NomeUsuario.nomeJogador, 0, DIFICULDADE_ESCOLHIDA)
         else

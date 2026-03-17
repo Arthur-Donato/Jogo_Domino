@@ -1,10 +1,12 @@
 local GameState = require 'lib.GameState'
 local config = require 'config'
 
-local historico = {
+local ranking = {
 
     listaRanking = {}
 }
+
+local posicaoRetangulo = 0
 
 local function calcularPosicaoDoBotao(botao)
     local posicaoAtualX = config.WIDTH - botao.width * 1.25
@@ -14,7 +16,7 @@ local function calcularPosicaoDoBotao(botao)
     botao.y = posicaoAtualY
 end
 
-function historico:enter()
+function ranking:enter()
     self.fonteBotoes = love.graphics.newFont(32)
 
     self.botaoVoltar = {
@@ -36,7 +38,7 @@ function historico:enter()
         FROM historico_partidas
         GROUP BY nome_jogador
         ORDER BY pontuacao_total desc
-        LIMIT 5 
+        LIMIT 6 
     ]]
     
     local posicao = 1
@@ -51,14 +53,12 @@ function historico:enter()
     end
 end
 
-function historico:draw()
+function ranking:draw()
     -- NAO CRIEI LOOP PARA DESENHAR OS BOTOES NA TELA PQ NESSA TELA TEM APENAS UM BOTAO ENT DECIDI TRATAR COMO UMA VARIAVEL E NAO UMA TABELA
     love.graphics.clear(0.953, 0.953, 0.953, 1)
 
     love.graphics.setLineWidth(5)
     love.graphics.setColor(0,0,0,1)
-
-    love.graphics.line(config.WIDTH / 2, 0, config.WIDTH / 2, config.HEIGHT)
 
     if self.botaoVoltar.isHovering then
         love.graphics.setColor(0.8, 0.8, 0.8, 1)
@@ -81,23 +81,33 @@ function historico:draw()
 
     love.graphics.setColor(0, 0, 0, 1)
     
-    love.graphics.print("--- TOP 10 JOGADORES ---", 300, 50)
+    love.graphics.print("--- TOP 6 JOGADORES ---", 800, 50)
 
     -- Percorre a tabela que preenchemos lá no enter()
     for i, jogador in ipairs(self.listaRanking) do
+
+        love.graphics.setColor(0,0,0,1)
         -- Calcula o espaçamento vertical (Y) para cada linha ficar embaixo da outra
-        local posicaoY = 100 + (i * 35) 
+        local posicaoY = 100 + (i * 100) 
+
+        self.posicaoRetangulo = (100 + posicaoRetangulo) * i
+
+        local posicaoTexto = (posicaoY + (100 / 2) - (self.fonteBotoes:getHeight() / 2))
+
+
+        love.graphics.rectangle("line", 100, posicaoY, 1700, 100)
         
         -- Monta o texto bonitinho. Ex: "1º - Arthur: 150 pts (Difícil)"
+        local textoE = "O jogador " .. jogador.nome .. " possui " .. jogador.pontuacao .. "pts e ocupa o " .. jogador.posicao .. "º lugar "
         local texto = jogador.posicao .. "º - " .. jogador.nome .. ": " .. jogador.pontuacao .. " pts"
         
-        love.graphics.print(texto, 300, posicaoY)
+        love.graphics.printf(texto, 100, posicaoTexto, 1700, "center")
     end
     
     love.graphics.setColor(1, 1, 1, 1)
 end
 
-function historico:update()
+function ranking:update()
     local mx = love.mouse.getX()
     local my = love.mouse.getY()
 
@@ -113,7 +123,7 @@ function historico:update()
     
 end
 
-function historico:mousepressed(x, y, button, istouch)
+function ranking:mousepressed(x, y, button, istouch)
     if button == 1 then
         if self.botaoVoltar.isHovering then
             GameState.switch('menuInicial')
@@ -121,4 +131,4 @@ function historico:mousepressed(x, y, button, istouch)
     end
 end
 
-return historico
+return ranking

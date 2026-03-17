@@ -8,7 +8,7 @@ function love.load()
     GameState.register("selecionarDificuldade", require 'states.SelecionarDificuldade')
     GameState.register('inserirNomeJogador', require 'states.NomeUsuario')
     GameState.register("sairJogo", require 'states.SairJogo')
-    GameState.register("historico", require 'states.Historico')
+    GameState.register("ranking", require 'states.Ranking')
     GameState.register("Game", require 'states.Game')
     GameState.register('Vencedor', require 'states.Vencedor')
 
