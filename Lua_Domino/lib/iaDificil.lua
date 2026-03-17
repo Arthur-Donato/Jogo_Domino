@@ -1,11 +1,20 @@
+local config = require "config"
 local IADificil = {}
 
+-- Função auxiliar para girar a peça graficamente
+local function girarPeca(peca)
+    local temp = peca.leftValue
+    peca.leftValue = peca.rightValue
+    peca.rightValue = temp
+    peca.turned = not peca.turned
+end
+
 local function pesoPeca(peca)
-    return peca.valor1 + peca.valor2
+    return peca.leftValue + peca.rightValue
 end
 
 local function ehDupla(peca)
-    return peca.valor1 == peca.valor2
+    return peca.leftValue == peca.rightValue
 end
 
 local function contarNumerosNaMao(mao, ignorarIndice)
@@ -16,8 +25,8 @@ local function contarNumerosNaMao(mao, ignorarIndice)
 
     for indice, peca in ipairs(mao) do
         if indice ~= ignorarIndice then
-            contagem[peca.valor1] = contagem[peca.valor1] + 1
-            contagem[peca.valor2] = contagem[peca.valor2] + 1
+            contagem[peca.leftValue] = contagem[peca.leftValue] + 1
+            contagem[peca.rightValue] = contagem[peca.rightValue] + 1
         end
     end
 
@@ -32,14 +41,17 @@ local function contarNumerosJaSaidos(game)
 
     local atual = game.mesa.head
     while atual do
-        contagem[atual.peca.leftValue] = contagem[atual.peca.leftValue] + 1
-        contagem[atual.peca.rightValue] = contagem[atual.peca.rightValue] + 1
+        -- Tratamento para pegar a peça corretamente do nó da lista
+        if atual.peca then
+            contagem[atual.peca.leftValue] = contagem[atual.peca.leftValue] + 1
+            contagem[atual.peca.rightValue] = contagem[atual.peca.rightValue] + 1
+        end
         atual = atual.nextNode
     end
 
     for _, peca in ipairs(game.maoIA) do
-        contagem[peca.valor1] = contagem[peca.valor1] + 1
-        contagem[peca.valor2] = contagem[peca.valor2] + 1
+        contagem[peca.leftValue] = contagem[peca.leftValue] + 1
+        contagem[peca.rightValue] = contagem[peca.rightValue] + 1
     end
 
     return contagem
@@ -47,16 +59,16 @@ end
 
 local function descobrirValorAberto(peca, lado, esquerda, direita)
     if lado == "esquerda" then
-        if peca.valor1 == esquerda then
-            return peca.valor2
+        if peca.leftValue == esquerda then
+            return peca.rightValue
         else
-            return peca.valor1
+            return peca.leftValue
         end
     else
-        if peca.valor1 == direita then
-            return peca.valor2
+        if peca.leftValue == direita then
+            return peca.rightValue
         else
-            return peca.valor1
+            return peca.leftValue
         end
     end
 end
@@ -66,7 +78,7 @@ local function contarContinuidade(mao, ignorarIndice, valorAlvo)
 
     for indice, peca in ipairs(mao) do
         if indice ~= ignorarIndice then
-            if peca.valor1 == valorAlvo or peca.valor2 == valorAlvo then
+            if peca.leftValue == valorAlvo or peca.rightValue == valorAlvo then
                 total = total + 1
             end
         end
@@ -85,9 +97,9 @@ function IADificil.buscarJogadasValidas(game)
         for i, peca in ipairs(game.maoIA) do
             table.insert(jogadas, {
                 indice = i,
-                lado = "direita",
+                lado = "primeira",
                 soma = pesoPeca(peca),
-                valorAberto = peca.valor2
+                valorAberto = peca.rightValue
             })
         end
         return jogadas
@@ -96,7 +108,7 @@ function IADificil.buscarJogadasValidas(game)
     for i, peca in ipairs(game.maoIA) do
         local soma = pesoPeca(peca)
 
-        if peca.valor1 == esquerda or peca.valor2 == esquerda then
+        if peca.leftValue == esquerda or peca.rightValue == esquerda then
             local valorAberto = descobrirValorAberto(peca, "esquerda", esquerda, direita)
             table.insert(jogadas, {
                 indice = i,
@@ -106,7 +118,7 @@ function IADificil.buscarJogadasValidas(game)
             })
         end
 
-        if peca.valor1 == direita or peca.valor2 == direita then
+        if peca.leftValue == direita or peca.rightValue == direita then
             local valorAberto = descobrirValorAberto(peca, "direita", esquerda, direita)
             table.insert(jogadas, {
                 indice = i,
@@ -131,7 +143,7 @@ function IADificil.avaliarJogada(game, jogada)
     pontuacao = pontuacao + (pesoPeca(peca) * 2)
 
     if ehDupla(peca) then
-        pontuacao = pontuacao + 8 + peca.valor1
+        pontuacao = pontuacao + 8 + peca.leftValue
     end
 
     local continuidade = contarContinuidade(game.maoIA, jogada.indice, valorAberto)
@@ -144,20 +156,22 @@ function IADificil.avaliarJogada(game, jogada)
     end
 
     local jaSaiu = numerosSaidos[valorAberto]
-    pontuacao = pontuacao + (jaSaiu * 3)
+    if jaSaiu then
+        pontuacao = pontuacao + (jaSaiu * 3)
 
-    if jaSaiu >= 6 then
-        pontuacao = pontuacao + 12
-    elseif jaSaiu >= 5 then
-        pontuacao = pontuacao + 8
-    end
+        if jaSaiu >= 6 then
+            pontuacao = pontuacao + 12
+        elseif jaSaiu >= 5 then
+            pontuacao = pontuacao + 8
+        end
 
-    if jaSaiu >= 5 and continuidade >= 1 then
-        pontuacao = pontuacao + 10
-    end
+        if jaSaiu >= 5 and continuidade >= 1 then
+            pontuacao = pontuacao + 10
+        end
 
-    if jaSaiu <= 2 and continuidade <= 1 then
-        pontuacao = pontuacao - 10
+        if jaSaiu <= 2 and continuidade <= 1 then
+            pontuacao = pontuacao - 10
+        end
     end
 
     if #game.maoIA <= 3 then
@@ -197,41 +211,51 @@ end
 function IADificil.jogada(game)
     local jogadas = IADificil.buscarJogadasValidas(game)
 
-    print("jogadas validas da ia dificil:", #jogadas)
+    print("Jogadas validas da IA dificil:", #jogadas)
 
     -- Se já existe jogada, joga
     if #jogadas > 0 then
         local escolhida = IADificil.escolherJogadaDificil(game, jogadas)
         local peca = table.remove(game.maoIA, escolhida.indice)
 
-        if escolhida.lado == "esquerda" then
-            local inseriu = game.mesa:addFirst(peca.valor1, peca.valor2)
-            if not inseriu then
-                print("erro ao inserir peca da ia na esquerda")
-                table.insert(game.maoIA, peca)
-                return false
-            end
-        else
-            local inseriu = game.mesa:addLast(peca.valor1, peca.valor2)
-            if not inseriu then
-                print("erro ao inserir peca da ia na direita")
-                table.insert(game.maoIA, peca)
-                return false
-            end
+        -- Se a mesa estiver vazia
+        if game.mesa:isEmpty() or escolhida.lado == "primeira" then
+            peca.x = config.WIDTH 
+            peca.y = config.HEIGHT
+            game.mesa:addFirst(peca)
+            print("IA dificil jogou a primeira peca: " .. peca.leftValue .. "-" .. peca.rightValue)
+            return true
         end
 
-        print("ia dificil jogou:", peca.valor1 .. "-" .. peca.valor2)
+        local esquerda = game.mesa:getHeadValue()
+        local direita = game.mesa:getTailValue()
+
+        if escolhida.lado == "esquerda" then
+            if peca.leftValue == esquerda then
+                girarPeca(peca)
+            end
+            peca.x = config.WIDTH - (game.mesa.leftSize * peca.height)
+            peca.y = config.HEIGHT
+            game.mesa:addFirst(peca)
+        else
+            if peca.rightValue == direita then
+                girarPeca(peca)
+            end
+            peca.x = config.WIDTH + (game.mesa.rightSize * peca.height)
+            peca.y = config.HEIGHT
+            game.mesa:addLast(peca)
+        end
+
+        print("IA dificil jogou:", peca.leftValue .. "-" .. peca.rightValue)
         return true
     end
 
     -- Se não tem jogada, compra
-    print("ia dificil não tem jogada valida, vai comprar")
+    print("IA dificil não tem jogada valida, vai comprar")
     local conseguiuComprar = game:comprarAteEncontrarJogadaIA()
 
     if conseguiuComprar then
-        -- A peça jogável foi comprada e ficará visível na mão por um tempo.
-        -- O update() vai chamar a IA novamente depois do delay para jogar.
-        print("IA difícil comprou uma peça jogável e vai esperar para jogar")
+        print("IA difícil comprou uma peça jogável e vai esperar o delay para jogar")
         return true
     end
 

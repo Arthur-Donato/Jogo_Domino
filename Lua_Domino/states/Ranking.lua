@@ -34,7 +34,7 @@ function ranking:enter()
     self.listaRanking = {}
 
     local query = [[
-        SELECT nome_jogador, SUM(pontuacao) as pontuacao_total
+        SELECT nome_jogador, data_partida, SUM(pontuacao) as pontuacao_total
         FROM historico_partidas
         GROUP BY nome_jogador
         ORDER BY pontuacao_total desc
@@ -46,7 +46,8 @@ function ranking:enter()
         table.insert(self.listaRanking, {
             posicao = posicao,
             nome = linha.nome_jogador,
-            pontuacao = linha.pontuacao_total
+            pontuacao = linha.pontuacao_total,
+            data_partida = linha.data_partida
         })
 
         posicao = posicao + 1
@@ -97,9 +98,7 @@ function ranking:draw()
 
         love.graphics.rectangle("line", 100, posicaoY, 1700, 100)
         
-        -- Monta o texto bonitinho. Ex: "1º - Arthur: 150 pts (Difícil)"
-        local textoE = "O jogador " .. jogador.nome .. " possui " .. jogador.pontuacao .. "pts e ocupa o " .. jogador.posicao .. "º lugar "
-        local texto = jogador.posicao .. "º - " .. jogador.nome .. ": " .. jogador.pontuacao .. " pts"
+        local texto = jogador.posicao .. "º - " .. jogador.nome .. ": " .. jogador.pontuacao .. " pts (Ultima partida foi: " .. jogador.data_partida .. ")"
         
         love.graphics.printf(texto, 100, posicaoTexto, 1700, "center")
     end
