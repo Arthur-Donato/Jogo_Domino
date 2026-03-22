@@ -30,28 +30,6 @@ function ranking:enter()
     
 
     calcularPosicaoDoBotao(self.botaoVoltar)
-
-    self.listaRanking = {}
-
-    local query = [[
-        SELECT nome_jogador, data_partida, SUM(pontuacao) as pontuacao_total
-        FROM historico_partidas
-        GROUP BY nome_jogador
-        ORDER BY pontuacao_total desc
-        LIMIT 6 
-    ]]
-    
-    local posicao = 1
-    for linha in DB:nrows(query) do
-        table.insert(self.listaRanking, {
-            posicao = posicao,
-            nome = linha.nome_jogador,
-            pontuacao = linha.pontuacao_total,
-            data_partida = linha.data_partida
-        })
-
-        posicao = posicao + 1
-    end
 end
 
 function ranking:draw()
@@ -82,7 +60,7 @@ function ranking:draw()
 
     love.graphics.setColor(0, 0, 0, 1)
     
-    love.graphics.print("--- TOP 6 JOGADORES ---", 800, 50)
+    love.graphics.print("Funcionalidade desativada (Mude de branch para ter acesso ao jogo com banco de dados)", 200, 200)
 
     -- Percorre a tabela que preenchemos lá no enter()
     for i, jogador in ipairs(self.listaRanking) do

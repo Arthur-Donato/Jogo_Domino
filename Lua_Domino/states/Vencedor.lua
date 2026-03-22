@@ -48,37 +48,4 @@ function Vencedor:keypressed(key)
     end
 end
 
-function Vencedor:inserirDadosNoBancoDeDados()
-
-    local query = "INSERT INTO historico_partidas (nome_jogador, pontuacao, dificuldade) VALUES (?, ?, ?)"
-    local stmt = DB:prepare(query)
-
-    if stmt then
-        
-        if self.vencedor == "jogador" then
-            stmt:bind_values(NomeUsuario.nomeJogador, 3, DIFICULDADE_ESCOLHIDA)
-            
-        elseif self.vencedor == "ia" then
-            stmt:bind_values(NomeUsuario.nomeJogador, 0, DIFICULDADE_ESCOLHIDA)
-        else
-            stmt:bind_values(NomeUsuario.nomeJogador, 1, DIFICULDADE_ESCOLHIDA)
-        end
-
-        local resultado = stmt:step()
-
-        -- Verificamos se o passo foi concluído (DONE) com sucesso
-        if resultado == sqlite3.DONE then
-            print("AGORA SIM! Salvo de verdade no banco.")
-        else
-            -- Se falhou, o banco vai cuspir o motivo exato aqui!
-            print("ERRO SILENCIOSO NO SQLITE: " .. DB:errmsg())
-            print("NOME TENTADO: " .. tostring(NomeUsuario.nomeJogador))
-        end
-
-        stmt:finalize()
-
-        print("Salvo no banco com sucesso UMA única vez!")
-    end
-end
-
 return Vencedor

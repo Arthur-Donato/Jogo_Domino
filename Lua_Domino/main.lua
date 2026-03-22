@@ -1,6 +1,5 @@
 gameState = "menuInicial"
 local GameState = require 'lib.GameState'
-local sqlite3 = require("lsqlite3")
 
 function love.load()
     --ADICIONANDO A TELA PARA SER RECONHECIDA COMO UM ESTADO
@@ -16,43 +15,6 @@ function love.load()
     local width,height = love.window.getDesktopDimensions()
     love.window.setMode(width,height)
     love.graphics.printf("largura:".. width.." altura:"..height,width/2,height/2,love.graphics.getWidth(),center)
-
-
-    love.filesystem.setIdentity("ProjetoDomino")
-    
-    -- 2. Força o LÖVE a criar essa pasta fisicamente no seu Linux agora mesmo
-    love.filesystem.createDirectory("")
-
-    -- 3. Pega o caminho completo da pasta
-    local caminho_db = love.filesystem.getSaveDirectory() .. "/dados_do_jogo.db"
-    
-    -- (Opcional) Printa no console para você saber exatamente onde o arquivo .db está sendo salvo
-    print("O banco de dados será salvo em: " .. caminho_db)
-
-    -- 4. Tenta abrir/criar o banco, mas agora pegamos a mensagem de erro se der errado
-    DB, codigoErro, msgErro = sqlite3.open(caminho_db)
-
-    -- 5. Trava de segurança: se o db for nil, ele avisa o porquê e não deixa o jogo dar crash!
-    if not DB then
-        print("FALHA CRÍTICA NO SQLITE: Não foi possível criar o banco de dados.")
-        print("Motivo do erro: " .. tostring(msgErro))
-        return -- Sai da função para não dar erro na linha 39
-    end
-
-    -- 6. O comando SQL para criar a tabela (o mesmo de antes)
-    local query_criar_tabela = [[
-        CREATE TABLE IF NOT EXISTS historico_partidas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome_jogador TEXT NOT NULL,
-            pontuacao INTEGER,
-            dificuldade TEXT NOT NULL,
-            data_partida DATETIME DEFAULT CURRENT_TIMESTAMP
-        );
-    ]]
-
-    DB:exec(query_criar_tabela)
-    print("Tabela 'historico_partidas' verificada/criada com sucesso!")
-
     --INICIANDO O JOGO NA TELA DE MENU INICIAL
     GameState.switch("menuInicial")
     
@@ -83,12 +45,5 @@ function love.textinput(t)
     -- O textinput cuida APENAS das letras digitadas (a, b, c, A, ç, etc)
     if GameState.textinput then
         GameState.textinput(t)
-    end
-end
-
-function love.quit()
-    if DB and DB:isopen() then
-        DB:close()
-        print("Banco de dados fechado e dados descarregados no disco!")
     end
 end
