@@ -8,8 +8,6 @@ function Vencedor:enter(vencedor, mensagem)
     self.mensagem = mensagem or ""
     self.fonteTitulo = love.graphics.newFont(48 * config.scaleX)
     self.fonteTexto = love.graphics.newFont(26 * config.scaleX)
-
-    self:inserirDadosNoBancoDeDados()
 end
 
 function Vencedor:draw()
