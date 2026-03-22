@@ -15,19 +15,6 @@ function IAMedio.buscarJogadasValidas(game)
 
     local esquerda = game.mesa:getHeadValue()
     local direita = game.mesa:getTailValue()
-
-    -- Se a mesa estiver vazia, a IA pode jogar qualquer peça
-    if esquerda == nil or direita == nil then
-        for i, peca in ipairs(game.maoIA) do
-            table.insert(jogadas, {
-                indice = i,
-                lado = "primeira",
-                soma = peca.leftValue + peca.rightValue
-            })
-        end
-        return jogadas
-    end
-
     -- Pegar todas as jogadas possíveis
     for i, peca in ipairs(game.maoIA) do 
         local soma = peca.leftValue + peca.rightValue

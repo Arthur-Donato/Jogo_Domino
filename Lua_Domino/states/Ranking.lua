@@ -98,7 +98,7 @@ function ranking:draw()
 
         love.graphics.rectangle("line", 100, posicaoY, 1700, 100)
         
-        local texto = jogador.posicao .. "º - " .. jogador.nome .. ": " .. jogador.pontuacao .. " pts (Ultima partida foi: " .. jogador.data_partida .. ")"
+        local texto = jogador.posicao .. "º - " .. jogador.nome .. ": " .. jogador.pontuacao .. " pts"
         
         love.graphics.printf(texto, 100, posicaoTexto, 1700, "center")
     end

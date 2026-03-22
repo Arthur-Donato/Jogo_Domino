@@ -110,9 +110,7 @@ local function criarPecas(monte)
         for j = i, 6 do
             local novaPeca = Peca.new(i, j)
             local imagemPeca = love.graphics.newImage("images/" .. i .. "-" .. j .. ".png")
-            if (i==1 and j ==2) and (love.math.random(100) > 0) then
-                imagemPeca = love.graphics.newImage("images/1-2Referencia.png")
-            end
+
             novaPeca.img = imagemPeca
             table.insert(monte, novaPeca)
         end
@@ -237,7 +235,7 @@ function Game:update(dt)
 
     -- Hover na mão do jogador (V1)
     for _, piece in ipairs(self.maoJogador) do
-        if mx > piece.x and mx < piece.x + piece.width and my > piece.y and my < piece.y + piece.height then
+        if mx > piece.x and mx < piece.x + piece.width and my > piece.y and my < piece.y + piece.height and self:pecaEncaixaNaMesa(piece) then
             piece.isHovering = true
         else
             piece.isHovering = false
