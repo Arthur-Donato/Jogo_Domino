@@ -55,6 +55,12 @@ function Gamestate.mousepressed(x, y, button, istouch)
     end
 end
 
+function Gamestate.textinput(t)
+    if Gamestate.current and Gamestate.current.textinput then
+        Gamestate.current:textinput(t)
+    end
+end
+
 -- Adicione outras funções do LÖVE aqui (mousemoved, keyreleased, etc.) conforme precisar
 
 return Gamestate

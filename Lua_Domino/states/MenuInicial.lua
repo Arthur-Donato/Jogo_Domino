@@ -1,20 +1,24 @@
-local WIDTH, HEIGHT = love.window.getDesktopDimensions()
+local config = require "config" --Classe com as variáveis globais para configuração do jogo
 local GameState = require 'lib.GameState'
 
-local baseWidth = 1920
-local baseHeight = 1080
 
-local scaleX = WIDTH / baseWidth --Pegando a proporção da largura da tela
-local scaleY = HEIGHT / baseHeight -- Pegando a proporção da altura da tela
-
-local btnResponsiveX = 370 * scaleX -- Determinando tamanho dos botoes de forma responsiva
-local btnResponsiveY = 90 * scaleY
-
-local btnDisposicaoTelaX = (WIDTH / 2) - btnResponsiveX / 2
-
-local btnSpaceY = 20 * scaleY -- Espaçamento entre os botões
+local btnDisposicaoTelaX = 0
+local btnSpaceY = 20 * config.scaleY -- Espaçamento entre os botões
 
 local menuInicial = {}
+
+
+local function calcular_disposicao_botoes(botoes)
+    local posicaoAtualY = (config.HEIGHT/2) -btnSpaceY - config.btnResponsiveY * 2 -- deixando o segundo botao no centro da tela
+    for _,piece in ipairs(botoes) do
+        btnDisposicaoTelaX = (config.WIDTH / 2) - piece.width / 2
+        piece.x = btnDisposicaoTelaX
+        piece.y = posicaoAtualY
+
+
+        posicaoAtualY = posicaoAtualY + piece.height + btnSpaceY
+    end
+end
 
 function menuInicial:enter()
     self.title = "Domino"
@@ -22,8 +26,8 @@ function menuInicial:enter()
     self.botoes = {
         {
             id = "botaoIniciarJogo",
-            width = btnResponsiveX,
-            height = btnResponsiveY,
+            width = config.btnResponsiveX,
+            height = config.btnResponsiveY,
             text = "Iniciar Jogo",
             x = 0,
             y = 0,
@@ -32,9 +36,9 @@ function menuInicial:enter()
 
         {
             id = "botaoHistorico",
-            width = btnResponsiveX,
-            height = btnResponsiveY,
-            text = "Histórico",
+            width = config.btnResponsiveX,
+            height = config.btnResponsiveY,
+            text = "Ranking",
             x = 0,
             y = 0,
             isHovering = false
@@ -42,16 +46,17 @@ function menuInicial:enter()
 
         {   
             id = "botaoSairJogo",
-            width = btnResponsiveX,
-            height = btnResponsiveY,
+            width = config.btnResponsiveX*0.9,
+            height = config.btnResponsiveY*0.9,
             text = "Sair do Jogo",
             x = 0,
             y = 0,
             isHovering = false
         }
     }
-    
-    self.fonteBotoes = love.graphics.newFont(32 * scaleX)
+
+    self.fonteBotoes = love.graphics.newFont(32 * config.scaleX)
+    calcular_disposicao_botoes(self.botoes)
 
 end
 
@@ -62,23 +67,23 @@ function menuInicial:draw()
 
     love.graphics.setColor(0,0,0,1)
 
-    love.graphics.line(WIDTH/2,0,WIDTH/2,HEIGHT)
+    love.graphics.line(config.WIDTH/2,0,config.WIDTH/2,config.HEIGHT)
 
     
     --CRIANDO AS CIRCUNFERENCIAS PRESENTES NA TELA
-    love.graphics.circle("fill", WIDTH*0.1, HEIGHT*0.2, 50 * scaleX)
-    love.graphics.circle("fill", WIDTH*0.38, HEIGHT*0.2, 50 * scaleX)
 
-    love.graphics.circle("fill", WIDTH*0.1, HEIGHT*0.68, 50 * scaleX)
-    love.graphics.circle("fill", WIDTH*0.38, HEIGHT*0.68, 50 * scaleX)
-    love.graphics.circle("fill", WIDTH*0.61, HEIGHT*0.2, 50 * scaleX)
-    love.graphics.circle("fill", WIDTH*0.88, HEIGHT*0.2, 50 *scaleX)
+    local tamanhoCircle = 50 * config.scaleX
 
-    love.graphics.circle("fill", WIDTH*0.61, HEIGHT*0.68, 50 * scaleX)
-    love.graphics.circle("fill", WIDTH*0.88, HEIGHT*0.68, 50 * scaleX)
+    love.graphics.circle("fill", config.WIDTH*0.1, config.HEIGHT*0.2, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH*0.38, config.HEIGHT*0.2, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH*0.1, config.HEIGHT*0.68, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH*0.38, config.HEIGHT*0.68,tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH*0.61, config.HEIGHT*0.2, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH*0.88, config.HEIGHT*0.2, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH*0.61, config.HEIGHT*0.68,tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH*0.88, config.HEIGHT*0.68,tamanhoCircle)
 
     --CRIANDO O BOTAO DE INICIO DE JOGO
-    local posicaoAtualY = (HEIGHT/2) - btnResponsiveY * 2 -- deixando o primeiro botao abaixo do centro da tela
     for _,piece in ipairs(self.botoes) do
         
         if piece.isHovering then
@@ -87,31 +92,23 @@ function menuInicial:draw()
             love.graphics.setColor(1, 1, 1, 1)
         end
 
-        love.graphics.rectangle("fill", btnDisposicaoTelaX, posicaoAtualY, piece.width, piece.height)
+        love.graphics.rectangle("fill", piece.x, piece.y, piece.width, piece.height)
 
         love.graphics.setColor(0,0,0,1)
         love.graphics.setLineWidth(3)
 
-        love.graphics.rectangle("line", btnDisposicaoTelaX, posicaoAtualY, piece.width, piece.height)
+        love.graphics.rectangle("line", piece.x, piece.y, piece.width, piece.height)
 
         love.graphics.setLineWidth(1)
 
         love.graphics.setFont(self.fonteBotoes)
 
-        local posicaoTexto = posicaoAtualY + (piece.height / 2) - (self.fonteBotoes:getHeight() / 2)
+        local posicaoTexto = piece.y + (piece.height / 2) - (self.fonteBotoes:getHeight() / 2)
 
-        love.graphics.printf(piece.text, btnDisposicaoTelaX, posicaoTexto, piece.width, "center")
+        love.graphics.printf(piece.text, piece.x, posicaoTexto, piece.width, "center")
 
-        piece.x = btnDisposicaoTelaX
-        piece.y = posicaoAtualY
-
-
-        posicaoAtualY = posicaoAtualY + piece.height + btnSpaceY
 
     end
-
-
-
     
 end
 
@@ -139,11 +136,11 @@ function menuInicial:mousepressed(x, y, button, istouch)
     if button == 1 then
 
         if self.botoes[1].isHovering then
-            GameState.switch('selecionarDificuldade')
+            GameState.switch('inserirNomeJogador')
         end
 
         if self.botoes[2].isHovering then
-            GameState.switch('historico')
+            GameState.switch('ranking')
         end
 
         if self.botoes[3].isHovering then

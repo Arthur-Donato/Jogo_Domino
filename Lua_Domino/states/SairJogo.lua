@@ -1,29 +1,61 @@
 local GameState = require 'lib.GameState'
+local config = require 'config'
+
+local btnDisposicaoTelaY = 0
+local btnSpace = 20 * config.scaleY
+
+
 
 local sairJogo = { }
 
+
+local function calcular_disposicao_botoes(botoes)
+    --APLICAR UM LOGICA DIFERENTE PARA CALCULAR A POSICAO DOS BOTOES VISTO QUE OS BOTOES AGORA ESTAO DISPOSTOS NA HORIZONTAL E NAO NA VERTICAL
+    -- USAR APENAS A METADE DA TELA E O TAMANHO DOS BOTOES
+    local posicaoAtualX = (config.WIDTH / 2) - config.btnResponsiveY * 7
+
+    for _,piece in ipairs(botoes) do
+        btnDisposicaoTelaY = (config.HEIGHT / 2) - config.btnResponsiveY 
+
+        piece.x = posicaoAtualX
+        piece.y = btnDisposicaoTelaY
+
+        posicaoAtualX = posicaoAtualX + (piece.width * 2.3) + btnSpace
+    end
+
+
+end
+
+
 function sairJogo:enter()
-    self.fonteBotoes = love.graphics.newFont(32)
+    self.title = "Domino"
+    self.fonteBotoes = love.graphics.newFont(32 * config.scaleX)
+
+    
 
     self.botoes = {
-        botaoConfirmar = {
-            x = 173,
-            y = 422,
-            width = 370,
-            height = 90,
+         {
+            id = "botaoConfirmarSaida",
+            width = config.btnResponsiveX,
+            height = config.btnResponsiveY,
+            x = 0,
+            y = 0,
             text = "CONFIRMAR",
             isHovering = false
         },
 
-        botaoVoltar = {
-            x = 896,
-            y = 422,
-            width = 370,
-            height = 90,
+        {
+            id = "botaoVoltarMenu",
+            width = config.btnResponsiveX,
+            height = config.btnResponsiveY,
+            x = 0,
+            y = 0,
             text = "VOLTAR",
             isHovering = false
-        }
+        },
     }
+
+    calcular_disposicao_botoes(self.botoes)
     
 end
 
@@ -34,93 +66,68 @@ function sairJogo:draw()
 
     love.graphics.setColor(0,0,0,1)
 
-    love.graphics.line(720,0,720,1024)
+    love.graphics.line(config.WIDTH / 2 ,0,config.WIDTH / 2,config.HEIGHT)
 
     love.graphics.setLineWidth(3)
 
     --CRIANDO OS CIRCULOS
-    love.graphics.circle("fill", 150, 232, 50)
-    love.graphics.circle("fill", 358, 232, 50)
-    love.graphics.circle("fill", 567, 232, 50)
+    local tamanhoCircle = 50 * config.scaleX
+    love.graphics.circle("fill", config.WIDTH*0.1, config.HEIGHT * 0.2, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH* 0.25, config.HEIGHT * 0.2, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH * 0.38, config.HEIGHT * 0.2, tamanhoCircle)
 
-    love.graphics.circle("fill", 150, 701, 50)
-    love.graphics.circle("fill", 358, 701, 50)
-    love.graphics.circle("fill", 567, 701, 50)
+    love.graphics.circle("fill", config.WIDTH * 0.1, config.HEIGHT * 0.68, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH * 0.25, config.HEIGHT * 0.68, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH * 0.38, config.HEIGHT * 0.68, tamanhoCircle)
 
-    love.graphics.circle("fill", 873, 232, 50)
-    love.graphics.circle("fill", 1081, 232, 50)
-    love.graphics.circle("fill", 1290, 232, 50)
+    love.graphics.circle("fill", config.WIDTH * 0.6, config.HEIGHT * 0.2, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH * 0.75, config.HEIGHT * 0.2, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH * 0.9, config.HEIGHT * 0.2, tamanhoCircle)
 
-    love.graphics.circle("fill", 873, 701, 50)
-    love.graphics.circle("fill", 1081, 701, 50)
-    love.graphics.circle("fill", 1290, 701, 50)
+    love.graphics.circle("fill", config.WIDTH * 0.6, config.HEIGHT * 0.68, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH * 0.75, config.HEIGHT * 0.68, tamanhoCircle)
+    love.graphics.circle("fill", config.WIDTH * 0.9, config.HEIGHT * 0.68, tamanhoCircle)
 
 
-    --CRIANDO O BOTAO DE CONFIRMAR SAIDA
+    for _,piece in ipairs(self.botoes) do
+        if piece.isHovering then
+            love.graphics.setColor(0.8,0.8,0.8,1)
+        else
+            love.graphics.setColor(1,1,1,1)
+        end
 
-    if self.botoes.botaoConfirmar.isHovering then
-        love.graphics.setColor(0.8, 0.8, 0.8, 1)
-    else
-        love.graphics.setColor(1,1,1,1)
+        love.graphics.rectangle("fill", piece.x, piece.y, piece.width, piece.height)
+
+        love.graphics.setColor(0, 0, 0, 1)
+        love.graphics.setLineWidth(3)
+
+        love.graphics.rectangle("line", piece.x, piece.y, piece.width, piece.height)
+
+        love.graphics.setLineWidth(1)
+
+        love.graphics.setFont(self.fonteBotoes)
+
+        local posicaoTexto = piece.y + (piece.height / 2) - self.fonteBotoes:getHeight() / 2
+
+        love.graphics.printf(piece.text, piece.x, posicaoTexto, piece.width, "center")
     end
-
-    love.graphics.rectangle("fill", self.botoes.botaoConfirmar.x, self.botoes.botaoConfirmar.y, self.botoes.botaoConfirmar.width, self.botoes.botaoConfirmar.height)
-
-    love.graphics.setColor(0,0,0,1)
-
-    love.graphics.rectangle("line", self.botoes.botaoConfirmar.x, self.botoes.botaoConfirmar.y, self.botoes.botaoConfirmar.width, self.botoes.botaoConfirmar.height)
-
-    local posicaoTexto = self.botoes.botaoConfirmar.y + (self.botoes.botaoConfirmar.height / 2) - (self.fonteBotoes:getHeight() / 2)
-
-    love.graphics.setFont(self.fonteBotoes)
-
-    love.graphics.printf(self.botoes.botaoConfirmar.text, self.botoes.botaoConfirmar.x, posicaoTexto, self.botoes.botaoConfirmar.width, "center")
-
-    --CRIANDO O BOTAO PARA VOLTAR PARA O MENU PRINCIPAL
-
-    if self.botoes.botaoVoltar.isHovering then
-        love.graphics.setColor(0.8, 0.8, 0.8, 1)
-    else
-        love.graphics.setColor(1,1,1,1)
-        
-    end
-
-    love.graphics.rectangle("fill", self.botoes.botaoVoltar.x, self.botoes.botaoVoltar.y, self.botoes.botaoVoltar.width, self.botoes.botaoVoltar.height)
-
-    love.graphics.setColor(0,0,0,1)
-
-    love.graphics.rectangle("line", self.botoes.botaoVoltar.x, self.botoes.botaoVoltar.y, self.botoes.botaoVoltar.width, self.botoes.botaoVoltar.height)
-
-    posicaoTexto = self.botoes.botaoVoltar.y + (self.botoes.botaoVoltar.height / 2) - (self.fonteBotoes:getHeight() / 2)
-
-    love.graphics.printf(self.botoes.botaoVoltar.text, self.botoes.botaoVoltar.x, posicaoTexto, self.botoes.botaoVoltar.width, "center")
-    
 end
 
 function sairJogo:update()
     local mx = love.mouse.getX()
     local my = love.mouse.getY()
 
-    --VERIFICANDOO O HOVERING DO BOTAO CONFIRMAR
-    if mx > self.botoes.botaoConfirmar.x and
-       mx < self.botoes.botaoConfirmar.x + self.botoes.botaoConfirmar.width and
-       my > self.botoes.botaoConfirmar.y and
-       my < self.botoes.botaoConfirmar.y + self.botoes.botaoConfirmar.height
-    then
-        self.botoes.botaoConfirmar.isHovering = true
-    else
-        self.botoes.botaoConfirmar.isHovering = false
-    end
 
-    --VERIFICANDO O HOVERING DO BOTAO VOLRTAR
-    if mx > self.botoes.botaoVoltar.x and
-       mx < self.botoes.botaoVoltar.x + self.botoes.botaoVoltar.width and
-       my > self.botoes.botaoVoltar.y and
-       my < self.botoes.botaoVoltar.y + self.botoes.botaoVoltar.height
-    then
-        self.botoes.botaoVoltar.isHovering = true
-    else
-        self.botoes.botaoVoltar.isHovering = false
+    for _,piece in ipairs(self.botoes) do
+        if mx > piece.x and
+           mx < piece.x + piece.width and
+           my > piece.y and
+           my < piece.y + piece.height
+        then
+            piece.isHovering = true
+        else
+            piece.isHovering = false
+        end
     end
     
 end
@@ -128,12 +135,14 @@ end
 function sairJogo:mousepressed(x, y, button, istouch)
     
     if button == 1 then
-        if self.botoes.botaoConfirmar.isHovering then
-            os.exit(0)
-        end
+        for _,piece in ipairs(self.botoes) do
+            if piece.isHovering and (piece.id == "botaoConfirmarSaida") then
+                os.exit(0)
+            end
 
-        if self.botoes.botaoVoltar.isHovering then
-            GameState.switch('menuInicial')
+            if piece.isHovering and (piece.id == "botaoVoltarMenu") then
+                GameState.switch('menuInicial')
+            end
         end
     end
 end

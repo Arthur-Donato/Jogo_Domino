@@ -7,7 +7,10 @@ function ListaDuplamenteEncadeada.new()
     local instance = {
         head = nil,
         tail = nil,
-        size = 0
+        size = 0;
+        rightSize = 1,
+        leftSize = 1,
+        middle = nil
     }
 
     setmetatable(instance, ListaDuplamenteEncadeada)
@@ -15,66 +18,121 @@ function ListaDuplamenteEncadeada.new()
     
 end
 
-local function newNode(leftValue, rightValue)
+local function newNode(pecaExistente)
     return {
-        peca = Peca.new(leftValue, rightValue),
+        peca = pecaExistente,
         previousNode = nil,
         nextNode = nil
     }
 end
 
-function ListaDuplamenteEncadeada:addFirst(leftValue, rightValue)
-    self.size  = self.size + 1
 
-    local newPeca = newNode(leftValue, rightValue)
 
+function ListaDuplamenteEncadeada:addFirst(pecaExistente)
+    
+    local newPeca = newNode(pecaExistente)
+    
     if self:isEmpty() then
         self.head = newPeca
+        self.middle = newPeca
         self.head.previousNode = nil
         self.tail = newPeca
         self.tail.nextNode = nil
-    else
-        --COMPARAR OS DOIS LADOS DA PECA COM O LADO ESQUERDO DA HEAD PARA SABER SE SAO IGUAIS s
-        if self.head.EhCompativelLadoEsquerdo(newPeca.peca.leftValue) or self.head.EhCompativelLadoDireito(newPeca.peca.rightValue) then
-            local pecaAux = self.head
-
-            self.head = newPeca
-            self.head.previousNode = nil
-            self.head.nextNode = pecaAux
-
-            pecaAux.previousNode = self.head
-        end
-
+    elseif newPeca.peca.rightValue == -1 then --peça Meramente grafica. Server para mostrar o local onde as peças podem ser jogadas
+        
+        self.head.previousNode = newPeca
+        newPeca.nextNode = self.head
+    else  
+        local nodeAux = self.head
+        self.head = newPeca
+        self.head.previousNode = nil
+        self.head.nextNode = nodeAux
+        nodeAux.previousNode = self.head
+        self.leftSize = self.leftSize + 1
     end
+    self.size = self.size + 1
 end
 
-function ListaDuplamenteEncadeada:addLast(leftValue, rightValue)
+
+function ListaDuplamenteEncadeada:addLast(pecaExistente)
     
     --ADICIONAR O NOVO NO NO FINAL DA LISTA, UTILIZANDO A MESMA LOGICA DO METODO ACIMA
-    local newPeca = newNode(leftValue, rightValue)
+    local newPeca = newNode(pecaExistente)
 
     if self:isEmpty() then
         self.tail = newPeca
+        self.middle = newPeca
         self.tail.nextNode = nil
         self.head = newPeca
         self.head.previousNode = nil
-    else
-        if self.tail.peca:EhCompativelLadoDireito(newPeca.peca.leftValue) or self.tail.peca:EhCompativelLadoDireito(newPeca.peca.rightValue) then
-            local nodeAux = self.tail
 
+    elseif newPeca.peca.rightValue == -1 then --peça Meramente grafica. Server para mostrar o local onde as peças podem ser jogadas
+
+        self.tail.nextNode = newPeca
+        newPeca.previousNode = self.tail
+    else
+            local nodeAux = self.tail
             self.tail = newPeca
             self.tail.nextNode = nil
             self.tail.previousNode = nodeAux
 
             nodeAux.nextNode = self.tail
-            self.size  = self.size + 1
+            self.rightSize = self.rightSize + 1
         end
+        self.size = self.size + 1
+end
+
+function ListaDuplamenteEncadeada:EhCompativelDoisLados(pecaExistente)
+
+    local headValue = self:getHeadValue()
+    local tailValue = self:getTailValue()
+    
+
+    return  (pecaExistente:EhCompativelLadoDireito(tailValue) or pecaExistente:EhCompativelLadoEsquerdo(tailValue)) and
+            (pecaExistente:EhCompativelLadoDireito(headValue) or pecaExistente:EhCompativelLadoEsquerdo(headValue))
+    
+end
+
+function ListaDuplamenteEncadeada:addPecaGraficaEsquerda(x,y)
+    local peca = Peca.new(-1,-1)
+    peca.x = x
+    peca.y = y
+    peca.height = 160 --alterar para variavel posteiormente
+    peca.width = 100 
+    local imagemPeca = love.graphics.newImage("images/0-0.png")
+    peca.img = imagemPeca
+    self:addFirst(peca)
+end
+function ListaDuplamenteEncadeada:addPecaGraficaDireita(x,y)
+    local peca = Peca.new(-1,-1)
+    peca.x = x
+    peca.y = y
+    peca.height = 160 --alterar para variavel posteiormente
+    peca.width = 100 
+    local imagemPeca = love.graphics.newImage("images/0-0.png")
+    peca.img = imagemPeca
+    self:addLast(peca)
+end
+
+function ListaDuplamenteEncadeada:removePecasGraficas()
+    -- Remove o fantasma da esquerda (se existir)
+    if self.head ~= nil and self.head.previousNode ~= nil then
+        self.head.previousNode.nextNode = nil
+        self.head.previousNode = nil
+        self.size = self.size - 1 -- Corrige a contagem
+    end
+
+    -- Remove o fantasma da direita (se existir)
+    if self.tail ~= nil and self.tail.nextNode ~= nil then
+        self.tail.nextNode.previousNode = nil
+        self.tail.nextNode = nil
+        self.size = self.size - 1 -- Corrige a contagem
     end
 end
 
 -- No arquivo ListaDuplamenteEncadeada.lua
 function ListaDuplamenteEncadeada:getHeadValue()
-    if self.head then
+    if not self:isEmpty() then
         return self.head.peca.leftValue
     end
     return nil
@@ -82,7 +140,7 @@ end
 
 function ListaDuplamenteEncadeada:getTailValue()
     --RETORNAR APENAS O VALOR DA DIREITA DA PECA DE DOMINO QUE SE ENCONTRA NA CAUDA DA NOSSA LISTA
-    if self.tail then
+    if not self:isEmpty() then
         return self.tail.peca:returnsRightValue()
     end
 
